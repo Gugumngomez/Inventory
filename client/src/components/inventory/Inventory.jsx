@@ -12,8 +12,11 @@ const Inventory = () => {
         stockUsed: 0,
     });
     const [inventoryData, setInventoryData] = useState([]);
-    const [rawMaterials, setRawMaterials] = useState([]);
+    const [materialData, setMaterialData] = useState([]);
     const [selectedRawMaterial, setSelectedRawMaterial] = useState('');
+
+
+    const filteredInventoryData = inventoryData.map(entry => entry.rawMaterial.entries).flat();
 
 
     useEffect(() => {
@@ -22,9 +25,7 @@ const Inventory = () => {
                 const res = await axios.get('http://localhost:4040/api/inventory')
                 setInventoryData(res.data);
 
-                const uniqueItemCodes = [...new Set(res.data.map(entry => entry.rawMaterial))]
-                setRawMaterials(uniqueItemCodes);
-                console.log(uniqueItemCodes);
+
             } catch (error) {
                 console.error('Error fetching data:', error);
             }
@@ -37,8 +38,11 @@ const Inventory = () => {
         const fetchRawMaterials = async () => {
             try {
                 const res = await axios.get('http://localhost:4040/api/rawMaterials');
-                setRawMaterials(res.data);
-                console.log(res.data);
+                setMaterialData(res.data);
+
+                const uniqueItemCodes = [...new Set(res.data.map(entry => ({ id: entry.id, name: entry.name })))];
+                setMaterialData(uniqueItemCodes);
+                console.log("Raw Materials:", uniqueItemCodes);
             } catch (error) {
                 console.error('Error fetching raw materials:', error);
             }
@@ -62,7 +66,9 @@ const Inventory = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
         try {
+            // Calculate inStock based on the stockBalance of the previous day
             const stockBalance = calculateStockBalance();
             const newInventoryEntry = { ...formData, stockBalance, rawMaterial: selectedRawMaterial };
 
@@ -70,17 +76,16 @@ const Inventory = () => {
             await axios.post('http://localhost:4040/api/inventory', newInventoryEntry);
 
             // Update local state for display
-            const response = await axios.get('http://localhost:4040/api/inventory');
+            const response = await axios.get(`http://localhost:4040/api/rawMaterials/${encodeURIComponent(selectedRawMaterial)}/entries`);
             setInventoryData(response.data);
 
-
-            // Reset the form
-            setFormData({
+            // Reset the form with the updated inStock value
+            setFormData(prevState => ({
                 date: parseISO(new Date().toISOString().split('T')[0]),
-                inStock: 0,
+                inStock: stockBalance,
                 stockReceived: 0,
                 stockUsed: 0,
-            });
+            }));
         } catch (error) {
             console.error('Error saving data:', error);
         }
@@ -88,18 +93,50 @@ const Inventory = () => {
 
     const handleItemCodeChange = async (selectedCode) => {
         setSelectedRawMaterial(selectedCode);
-    };
+    
+        try {
+            const response = await axios.get(`http://localhost:4040/api/rawMaterials/${encodeURIComponent(selectedCode)}/entries`);
+            const rawMaterial = response.data;
+    
+            console.log('Raw Material Entries Response:', rawMaterial);
+    
+            if (rawMaterial && rawMaterial.entries && Array.isArray(rawMaterial.entries) && rawMaterial.entries.length > 0) {
+                setInventoryData(rawMaterial.entries);
+            } else {
+                console.error('Invalid data format for raw material entries:', rawMaterial);
+                setInventoryData([]); // Set an empty array as a fallback
+            }
+    
+            // Set initial inStock value based on the stockBalance of the last entry
+            if (rawMaterial && rawMaterial.entries && Array.isArray(rawMaterial.entries) && rawMaterial.entries.length > 0) {
+                const lastEntry = rawMaterial.entries[rawMaterial.entries.length - 1];
+                setFormData(prevState => ({
+                    ...prevState,
+                    inStock: lastEntry.stockBalance || 0,
+                }));
+            }
+        } catch (error) {
+            console.error('Error fetching data for selected raw material:', error);
+            setInventoryData([]); // Set an empty array as a fallback
+        }
+    };    
+
+
+
+
+
 
     return (
         <div className='m-5'>
             <h1 className='text-4xl font-bold text-center pb-6'>Raw Material{' '} <select
                 value={selectedRawMaterial}
                 onChange={(e) => handleItemCodeChange(e.target.value)}
+                className='bg-white cursor-pointer'
             >
                 <option value=''>Select RM</option>
-                {rawMaterials.map((code, index) => (
-                    <option key={index} value={code}>
-                        {code}
+                {materialData.map((material, index) => (
+                    <option key={index} value={material.name}>
+                        {material.name}
                     </option>
                 ))}
             </select></h1>
@@ -118,11 +155,21 @@ const Inventory = () => {
                         <tbody>
                             {inventoryData.map((entry, index) => (
                                 <tr key={index}>
-                                    <td className='border border-gray-300 p-2 text-center text-lg'>{entry.date}</td>
-                                    <td className='border border-gray-300 p-2 text-center text-lg'>{entry.inStock}</td>
-                                    <td className='border border-gray-300 p-2 text-center text-lg'>{entry.stockReceived}</td>
-                                    <td className='border border-gray-300 p-2 text-center text-lg'>{entry.stockUsed}</td>
-                                    <td className='border border-gray-300 p-2 text-center text-lg'>{entry.stockBalance}</td>
+                                    <td className='border border-gray-300 p-2 text-center text-lg'>
+                                        {entry && entry.date ? entry.date : '-'}
+                                    </td>
+                                    <td className='border border-gray-300 p-2 text-center text-lg'>
+                                        {entry && entry.inStock ? entry.inStock : '-'}
+                                    </td>
+                                    <td className='border border-gray-300 p-2 text-center text-lg'>
+                                        {entry && entry.stockReceived ? entry.stockReceived : '-'}
+                                    </td>
+                                    <td className='border border-gray-300 p-2 text-center text-lg'>
+                                        {entry && entry.stockUsed ? entry.stockUsed : '-'}
+                                    </td>
+                                    <td className='border border-gray-300 p-2 text-center text-lg'>
+                                        {entry && entry.stockBalance ? entry.stockBalance : '-'}
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
