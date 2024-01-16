@@ -16,6 +16,10 @@ const Inventory = () => {
     const [selectedRawMaterial, setSelectedRawMaterial] = useState('');
 
 
+    const filteredInventoryData = inventoryData
+        .filter(entry => entry.rawMaterial && entry.rawMaterial.entries)
+        .map(entry => entry.rawMaterial.entries)
+        .flat();
 
 
 
@@ -42,7 +46,10 @@ const Inventory = () => {
 
                 const uniqueItemCodes = [...new Set(res.data.map(entry => ({ id: entry.id, name: entry.name })))];
                 setMaterialData(uniqueItemCodes);
+
                 console.log("Raw Materials:", uniqueItemCodes);
+
+                handleItemCodeChange("RM - 004 Scrap Ext"); //default raw material
             } catch (error) {
                 console.error('Error fetching raw materials:', error);
             }
@@ -70,14 +77,18 @@ const Inventory = () => {
         try {
             // Calculate inStock based on the stockBalance of the previous day
             const stockBalance = calculateStockBalance();
-            const newInventoryEntry = { ...formData, stockBalance, rawMaterial: selectedRawMaterial };
+            const newInventoryEntry = {
+                ...formData,
+                stockBalance,
+                rawMaterial: { id: 1, name: selectedRawMaterial }
+            };
 
             // Save data to the server
             await axios.post('http://localhost:4040/api/inventory', newInventoryEntry);
 
             // Update local state for display
             const response = await axios.get(`http://localhost:4040/api/rawMaterials/${encodeURIComponent(selectedRawMaterial)}/entries`);
-            setInventoryData(response.data);
+            setInventoryData(response.data.entries);
 
             // Reset the form with the updated inStock value
             setFormData(prevState => ({
@@ -93,20 +104,20 @@ const Inventory = () => {
 
     const handleItemCodeChange = async (selectedCode) => {
         setSelectedRawMaterial(selectedCode);
-    
+
         try {
             const response = await axios.get(`http://localhost:4040/api/rawMaterials/${encodeURIComponent(selectedCode)}/entries`);
             const rawMaterial = response.data;
-    
+
             console.log('Raw Material Entries Response:', rawMaterial);
-    
+
             if (rawMaterial && rawMaterial.entries && Array.isArray(rawMaterial.entries) && rawMaterial.entries.length > 0) {
                 setInventoryData(rawMaterial.entries);
             } else {
                 console.error('Invalid data format for raw material entries:', rawMaterial);
                 setInventoryData([]); // Set an empty array as a fallback
             }
-    
+
             // Set initial inStock value based on the stockBalance of the last entry
             if (rawMaterial && rawMaterial.entries && Array.isArray(rawMaterial.entries) && rawMaterial.entries.length > 0) {
                 const lastEntry = rawMaterial.entries[rawMaterial.entries.length - 1];
@@ -119,7 +130,7 @@ const Inventory = () => {
             console.error('Error fetching data for selected raw material:', error);
             setInventoryData([]); // Set an empty array as a fallback
         }
-    };    
+    };
 
 
 
