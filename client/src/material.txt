@@ -1,0 +1,113 @@
+{ name: "RM - 004 Scrap Ext" },
+    { name: "RM - 010 Scrap Ext" },
+    { name: "RM - 100 Scrap" },
+    { name: "RM - 100 Starter Bars" },
+    { name: "RM - 101 Settler" },
+    { name: "RM - 304 Scrap Ext" },
+    { name: "RM - 319 Scrap Ext" },
+    { name: "RM - 400 Scrap" },
+    { name: "RM - 500 Scrap" },
+    {  name: "RM - 501 Settler" },
+    {  name: "RM - 600 Scrap" },
+    {  name: "RM - 622" },
+    {  name: "RM - 631" },
+    {  name: "RM - 632" },
+    {  name: "RM - 633" },
+    {  name: "RM - 645" },
+    {  name: "RM - 648" },
+    {  name: "RM - 661 Ext" },
+    {  name: "RM - 675" },
+    {  name: "RM - 681 Ext" },
+    {  name: "RM - 685" },
+    {  name: "RM - 686" },
+    {  name: "RM - 687" },
+    {  name: "RM - 689" },
+    {  name: "RM - 693 Ext" },
+    {  name: "RM - 694 Ext" },
+    {  name: "RM - 696 Ext" },
+    {  name: "RM - 671 Settler" },
+
+
+
+
+
+
+
+    // Define schema and model
+// const entrySchema = new mongoose.Schema({
+//     date: { type: String, required: true },
+//     inStock: { type: Number, required: true },
+//     stockUsed: { type: Number, required: true },
+//     stockBalance: { type: Number, required: true },
+//     stockReceived: { type: Number, required: true },
+// }, { _id: false });
+
+// const inventoryShema = new mongoose.Schema({
+//     rawMaterial: {
+//         id: { type: Number, required: true },
+//         name: { type: String, required: true },
+//         entries: [entrySchema],
+//     },
+// }, { versionKey: false });
+
+// const Inventory = mongoose.model('Inventory', inventoryShema);
+
+
+// Api endpoint
+// app.post('/api/inventory', async (req, res) => {
+//     try {
+//         const { entries, rawMaterial } = req.body;
+
+//         // Validate that 'rawMaterial' and 'entries' are present
+//         if (!rawMaterial || !entries || !Array.isArray(entries)) {
+//             return res.status(400).json({ error: 'Invalid request format' });
+//         }
+
+//         // Create a new Inventory instance with the provided rawMaterial and entries
+//         const inventoryEntry = new Inventory({ rawMaterial, entries });
+
+//         // Save the entry to the database
+//         const savedEntry = await inventoryEntry.save();
+
+//         res.status(201).json(savedEntry);
+//     } catch (error) {
+//         console.error('Error saving inventory entry:', error);
+//         res.status(500).json({ error: error.message });
+//     }
+// });
+
+
+
+
+app.get('/api/inventory', async (req, res) => {
+    try {
+        const inventoryData = await Inventory.find();
+        res.status(200).json(inventoryData);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+
+app.get('/api/rawMaterials/:name/entries', async (req, res) => {
+    try {
+        const name = req.params.name;
+        // Assuming raw materials are stored in an array for simplicity
+        const rawMaterial = await Inventory.findOne({ 'rawMaterial.name': name });
+
+        if (!rawMaterial) {
+            return res.status(404).json({ error: 'Raw material not found' });
+        }
+
+        if (!rawMaterial.entries || rawMaterial.entries.length === 0) {
+            return res.status(404).json({ error: 'No data available for the raw material' });
+        }
+        res.status(200).json(rawMaterial.entries);
+    } catch (error) {
+        console.error('Error fetching raw material:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+

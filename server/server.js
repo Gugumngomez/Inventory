@@ -2,7 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const rawMaterials = require('./rawMaterial');
+const RawMaterial = require('./rawMaterial');
 
 const app = express();
 
@@ -18,67 +18,88 @@ mongoose.connect("mongodb+srv://gugulethu:Superman1!@atlascluster.kvdittq.mongod
     useUnifiedTopology: true,
 });
 
-// Define schema and model
-
-const entrySchema = new mongoose.Schema({
-    date: { type: String, required: true },
-    stockUsed: { type: Number, required: true },
-    stockBalance: { type: Number, required: true },
-    stockReceived: { type: Number, required: true },
-}, {_id: false});
-
-const inventoryShema = new mongoose.Schema({
-    rawMaterial: { type: Object, required: true },
-    entries: [entrySchema],
-}, { versionKey: false });
-
-const Inventory = mongoose.model('Inventory', inventoryShema);
-
-
-// Api endpoint
-app.post('/api/inventory', async (req, res) => {
-    try {
-        const newEntry = new Inventory(req.body);
-        await newEntry.save();
-        res.status(201).json(newEntry);
-    } catch (error) {
-        console.error('Error saving inventory entry:', error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.get('/api/inventory', async (req, res) => {
-    try {
-        const inventoryData = await Inventory.find();
-        res.status(200).json(inventoryData);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
 
 app.get('/api/rawMaterials', async (req, res) => {
     try {
+        const rawMaterials = await RawMaterial.find();
         res.status(200).json(rawMaterials);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-app.get('/api/rawMaterials/:name/entries', async (req, res) => {
+app.post('/api/materialProperties', async (req, res) => {
     try {
-        const name = req.params.name;
-        // Assuming raw materials are stored in an array for simplicity
-        const rawMaterial = await Inventory.findOne({ 'rawMaterial.name': name});
+        const rawMaterials = [
+            { name: "RM - 004 Scrap Ext", entry: [] },
+            { name: "RM - 010 Scrap Ext", entry: [] },
+            { name: "RM - 100 Scrap", entry: [] },
+            { name: "RM - 100 Starter Bars", entry: [] },
+            { name: "RM - 101 Settler", entry: [] },
+            { name: "RM - 304 Scrap Ext", entry: [] },
+            { name: "RM - 319 Scrap Ext", entry: [] },
+            { name: "RM - 400 Scrap", entry: [] },
+            { name: "RM - 500 Scrap", entry: [] },
+            { name: "RM - 501 Settler", entry: [] },
+            { name: "RM - 600 Scrap", entry: [] },
+            { name: "RM - 622", entry: [] },
+            { name: "RM - 631", entry: [] },
+            { name: "RM - 632", entry: [] },
+            { name: "RM - 633", entry: [] },
+            { name: "RM - 645", entry: [] },
+            { name: "RM - 648", entry: [] },
+            { name: "RM - 661 Ext", entry: [] },
+            { name: "RM - 675", entry: [] },
+            { name: "RM - 681 Ext", entry: [] },
+            { name: "RM - 685", entry: [] },
+            { name: "RM - 686", entry: [] },
+            { name: "RM - 687", entry: [] },
+            { name: "RM - 689", entry: [] },
+            { name: "RM - 693 Ext", entry: [] },
+            { name: "RM - 694 Ext", entry: [] },
+            { name: "RM - 696 Ext", entry: [] },
+            { name: "RM - 671 Settler", entry: [] },
+        ];
+        const createdMaterials = await RawMaterial.create(rawMaterials);
+        res.status(201).json(createdMaterials);
 
-        if (!rawMaterial) {
-            return res.status(404).json({ error: 'Raw material not found' });
-        }
-        res.status(200).json(rawMaterial.entries);
+
     } catch (error) {
-        console.error('Error fetching raw material:', error);
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+app.get('/api/rawmaterials/:id', async (req, res) => {
+    const materialId = req.params.id;
+
+    try {
+        const rawMaterial = await RawMaterial.findById(materialId);
+        res.status(200).json(rawMaterial);
+    } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
+
+
+app.post('/api/rawMaterials/:id/entry', async (req, res) => {
+    const materialId = req.params.id;
+    const entryData = req.body;
+
+    try {
+        const updatedMaterial = await RawMaterial.findByIdAndUpdate(
+            materialId,
+            { $push: { entry: entryData } },
+            { new: true }
+        );
+
+        res.status(201).json(updatedMaterial);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`)

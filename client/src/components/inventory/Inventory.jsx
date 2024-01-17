@@ -1,193 +1,131 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
-import { parseISO } from 'date-fns';
 
 const Inventory = () => {
-    const [formData, setFormData] = useState({
-        date: parseISO(new Date().toISOString().split('T')[0]),
-        inStock: 0,
-        stockReceived: 0,
-        stockUsed: 0,
-    });
-    const [inventoryData, setInventoryData] = useState([]);
+    const [rawMaterials, setRawMaterials] = useState([]);
+    const [selectedMaterial, setSelectedMaterial] = useState('');
     const [materialData, setMaterialData] = useState([]);
-    const [selectedRawMaterial, setSelectedRawMaterial] = useState('');
 
 
-
+    // State variables for input data
+    const [inStock, setInStock] = useState('');
+    const [stockReceived, setStockReceived] = useState('');
+    const [stockUsed, setStockUsed] = useState('');
+    const [stockBalance, setStockBalance] = useState('');
 
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const res = await axios.get('http://localhost:4040/api/inventory')
-                setInventoryData(res.data);
-
-
-            } catch (error) {
-                console.error('Error fetching data:', error);
-            }
-        };
-
-        fetchData();
+        // Fetch raw materials from the server
+        axios.get('http://localhost:4040/api/rawmaterials')
+            .then(response => setRawMaterials(response.data))
+            .catch(error => console.error(error));
     }, []);
 
-    useEffect(() => {
-        const fetchRawMaterials = async () => {
-            try {
-                const res = await axios.get('http://localhost:4040/api/rawMaterials');
-                setMaterialData(res.data);
 
-                const uniqueItemCodes = [...new Set(res.data.map(entry => ({ id: entry.id, name: entry.name })))];
-                setMaterialData(uniqueItemCodes);
-                console.log("Raw Materials:", uniqueItemCodes);
-            } catch (error) {
-                console.error('Error fetching raw materials:', error);
-            }
-        };
-
-        fetchRawMaterials();
-    }, []);
-
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
-    };
-
-    const calculateStockBalance = () => {
-        return (
-            parseInt(formData.inStock) +
-            parseInt(formData.stockReceived) -
-            parseInt(formData.stockUsed)
-        );
-    }
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
+    const handleMaterialChange = async (materialId) => {
+        // Fetch data for the selected raw material
         try {
-            // Calculate inStock based on the stockBalance of the previous day
-            const stockBalance = calculateStockBalance();
-            const newInventoryEntry = { ...formData, stockBalance, rawMaterial: selectedRawMaterial };
-
-            // Save data to the server
-            await axios.post('http://localhost:4040/api/inventory', newInventoryEntry);
-
-            // Update local state for display
-            const response = await axios.get(`http://localhost:4040/api/rawMaterials/${encodeURIComponent(selectedRawMaterial)}/entries`);
-            setInventoryData(response.data);
-
-            // Reset the form with the updated inStock value
-            setFormData(prevState => ({
-                date: parseISO(new Date().toISOString().split('T')[0]),
-                inStock: stockBalance,
-                stockReceived: 0,
-                stockUsed: 0,
-            }));
+            const response = await axios.get(`http://localhost:4040/api/rawmaterials/${materialId}`);
+            setMaterialData(response.data.entry);
         } catch (error) {
-            console.error('Error saving data:', error);
+            console.error(error);
         }
     };
 
-    const handleItemCodeChange = async (selectedCode) => {
-        setSelectedRawMaterial(selectedCode);
-    
+    const handleInputData = async () => {
+        // Convert input values to numbers
+        const inStockValue = parseFloat(inStock);
+        const stockReceivedValue = parseFloat(stockReceived);
+        const stockUsedValue = parseFloat(stockUsed);
+
+        // Calculate stockBalance
+        const stockBalanceValue = inStockValue + stockReceivedValue - stockUsedValue;
+
+        // Create an object with input data
+        const inputData = {
+            inStock: inStockValue,
+            stockReceived: stockReceivedValue,
+            stockUsed: stockUsedValue,
+            stockBalance: stockBalanceValue,
+        };
+
         try {
-            const response = await axios.get(`http://localhost:4040/api/rawMaterials/${encodeURIComponent(selectedCode)}/entries`);
-            const rawMaterial = response.data;
-    
-            console.log('Raw Material Entries Response:', rawMaterial);
-    
-            if (rawMaterial && rawMaterial.entries && Array.isArray(rawMaterial.entries) && rawMaterial.entries.length > 0) {
-                setInventoryData(rawMaterial.entries);
-            } else {
-                console.error('Invalid data format for raw material entries:', rawMaterial);
-                setInventoryData([]); // Set an empty array as a fallback
-            }
-    
-            // Set initial inStock value based on the stockBalance of the last entry
-            if (rawMaterial && rawMaterial.entries && Array.isArray(rawMaterial.entries) && rawMaterial.entries.length > 0) {
-                const lastEntry = rawMaterial.entries[rawMaterial.entries.length - 1];
-                setFormData(prevState => ({
-                    ...prevState,
-                    inStock: lastEntry.stockBalance || 0,
-                }));
-            }
+            await axios.post(`http://localhost:4040/api/rawMaterials/${selectedMaterial}/entry`, inputData);
+            // Refresh data after submitting
+            handleMaterialChange(selectedMaterial);
+
+            // Clear input fields
+            setInStock('');
+            setStockReceived('');
+            setStockUsed('');
+            setStockBalance('');
         } catch (error) {
-            console.error('Error fetching data for selected raw material:', error);
-            setInventoryData([]); // Set an empty array as a fallback
+            console.error(error);
         }
-    };    
-
-
-
-
-
+    };
 
     return (
-        <div className='m-5'>
-            <h1 className='text-4xl font-bold text-center pb-6'>Raw Material{' '} <select
-                value={selectedRawMaterial}
-                onChange={(e) => handleItemCodeChange(e.target.value)}
-                className='bg-white cursor-pointer'
-            >
-                <option value=''>Select RM</option>
-                {materialData.map((material, index) => (
-                    <option key={index} value={material.name}>
+        <div>
+            <label>Select Raw Material:</label>
+            <select onChange={(e) => { setSelectedMaterial(e.target.value); handleMaterialChange(e.target.value); }}>
+                <option value="">Select...</option>
+                {rawMaterials.map(material => (
+                    <option key={material._id} value={material._id}>
                         {material.name}
                     </option>
                 ))}
-            </select></h1>
-            <div className='mb-6'>
-                <form onSubmit={handleSubmit}>
-                    <table className='min-w-full border border-gray-300'>
+            </select>
+
+            {selectedMaterial && (
+                <div>
+                    <h3>Data for {selectedMaterial}</h3>
+                    <table>
                         <thead>
                             <tr>
-                                <th className='border border-gray-300 p-2 text-xl'>Date</th>
-                                <th className='border border-gray-300 p-2 text-xl'>In Stock</th>
-                                <th className='border border-gray-300 p-2 text-xl'>Stock Received</th>
-                                <th className='border border-gray-300 p-2 text-xl'>Stock Used</th>
-                                <th className='border border-gray-300 p-2 text-xl'>Stock Balance</th>
+                                <th>Date</th>
+                                <th>In Stock</th>
+                                <th>Stock Received</th>
+                                <th>Stock Used</th>
+                                <th>Stock Balance</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {inventoryData.map((entry, index) => (
-                                <tr key={index}>
-                                    <td className='border border-gray-300 p-2 text-center text-lg'>
-                                        {entry && entry.date ? entry.date : '-'}
-                                    </td>
-                                    <td className='border border-gray-300 p-2 text-center text-lg'>
-                                        {entry && entry.inStock ? entry.inStock : '-'}
-                                    </td>
-                                    <td className='border border-gray-300 p-2 text-center text-lg'>
-                                        {entry && entry.stockReceived ? entry.stockReceived : '-'}
-                                    </td>
-                                    <td className='border border-gray-300 p-2 text-center text-lg'>
-                                        {entry && entry.stockUsed ? entry.stockUsed : '-'}
-                                    </td>
-                                    <td className='border border-gray-300 p-2 text-center text-lg'>
-                                        {entry && entry.stockBalance ? entry.stockBalance : '-'}
-                                    </td>
+                            {materialData?.map(entry => (
+                                <tr key={entry._id}>
+                                    <td>{entry.date}</td>
+                                    <td>{entry.inStock}</td>
+                                    <td>{entry.stockReceived}</td>
+                                    <td>{entry.stockUsed}</td>
+                                    <td>{entry.stockBalance}</td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
-                    <div className='mt-4'>
-                        <DatePicker
-                            selected={formData.date}
-                            onChange={(date) => setFormData({ ...formData, date })}
-                        />
-                        <input type='number' name='inStock' value={formData.inStock} onChange={handleInputChange} />
-                        <input type='number' name='stockReceived' value={formData.stockReceived} onChange={handleInputChange} />
-                        <input type='number' name='stockUsed' value={formData.stockUsed} onChange={handleInputChange} />
-                        <button type='submit'>Save</button>
-                    </div>
-                </form>
-            </div>
+
+                    <form onSubmit={handleInputData}>
+                        <label>
+                            In Stock:
+                            <input type="number" value={inStock} onChange={(e) => setInStock(e.target.value)} />
+                        </label>
+                        <label>
+                            Stock Received:
+                            <input type="number" value={stockReceived} onChange={(e) => setStockReceived(e.target.value)} />
+                        </label>
+                        <label>
+                            Stock Used:
+                            <input type="number" value={stockUsed} onChange={(e) => setStockUsed(e.target.value)} />
+                        </label>
+                        <label>
+                            Stock Balance:
+                            <input type="number" value={stockBalance} onChange={(e) => setStockBalance(e.target.value)} />
+                        </label>
+                        <button type="submit">Submit Data</button>
+                    </form>
+                </div>
+            )}
         </div>
     );
 };
+
 
 export default Inventory;
