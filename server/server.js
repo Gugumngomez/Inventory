@@ -60,8 +60,17 @@ app.post('/api/materialProperties', async (req, res) => {
             { name: "RM - 696 Ext", entry: [] },
             { name: "RM - 671 Settler", entry: [] },
         ];
-        const createdMaterials = await RawMaterial.create(rawMaterials);
-        res.status(201).json(createdMaterials);
+
+
+        
+        for (const material of rawMaterials) {
+            const existingMaterial = await RawMaterial.findOne({ name: material.name });
+            if (!existingMaterial) {
+                await RawMaterial.create(material);
+            }
+        }
+
+        res.status(201).json({ message: 'Materials created successfully' });
 
 
     } catch (error) {

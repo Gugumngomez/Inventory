@@ -1,17 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { parseISO, format } from 'date-fns';
 
 const Inventory = () => {
     const [rawMaterials, setRawMaterials] = useState([]);
-    const [selectedMaterial, setSelectedMaterial] = useState('');
+    const [selectedMaterial, setSelectedMaterial] = useState('65a63e409e4ff172aef6220b');
     const [materialData, setMaterialData] = useState([]);
 
 
     // State variables for input data
-    const [inStock, setInStock] = useState('');
-    const [stockReceived, setStockReceived] = useState('');
-    const [stockUsed, setStockUsed] = useState('');
-    const [stockBalance, setStockBalance] = useState('');
+    const [formData, setFormData] = useState({
+        date: parseISO(new Date().toISOString().split('T')[0]),
+        inStock: 0,
+        stockReceived: 0,
+        stockUsed: 0,
+        stockBalance: 0,
+    });
 
 
     useEffect(() => {
@@ -21,6 +27,10 @@ const Inventory = () => {
             .catch(error => console.error(error));
     }, []);
 
+    useEffect(() => {
+        // Fetch data for the selected raw material
+        handleMaterialChange(selectedMaterial);
+    }, [selectedMaterial]);
 
     const handleMaterialChange = async (materialId) => {
         // Fetch data for the selected raw material
@@ -32,21 +42,26 @@ const Inventory = () => {
         }
     };
 
-    const handleInputData = async () => {
-        // Convert input values to numbers
-        const inStockValue = parseFloat(inStock);
-        const stockReceivedValue = parseFloat(stockReceived);
-        const stockUsedValue = parseFloat(stockUsed);
+    const calculateStockBalance = () => {
+        return (
+            parseInt(formData.inStock) +
+            parseInt(formData.stockReceived) -
+            parseInt(formData.stockUsed)
+        );
+    }
 
-        // Calculate stockBalance
-        const stockBalanceValue = inStockValue + stockReceivedValue - stockUsedValue;
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        const stockBalance = calculateStockBalance();
 
         // Create an object with input data
         const inputData = {
-            inStock: inStockValue,
-            stockReceived: stockReceivedValue,
-            stockUsed: stockUsedValue,
-            stockBalance: stockBalanceValue,
+            date: format(formData.date, 'yyyy-MM-dd'),
+            inStock: formData.inStock,
+            stockReceived: formData.stockReceived,
+            stockUsed: formData.stockUsed,
+            stockBalance: stockBalance,
         };
 
         try {
@@ -55,19 +70,25 @@ const Inventory = () => {
             handleMaterialChange(selectedMaterial);
 
             // Clear input fields
-            setInStock('');
-            setStockReceived('');
-            setStockUsed('');
-            setStockBalance('');
+            setFormData({
+                date: parseISO(new Date().toISOString().split('T')[0]),
+                inStock: 0,
+                stockReceived: 0,
+                stockUsed: 0,
+            });
         } catch (error) {
             console.error(error);
         }
     };
 
     return (
-        <div>
+        <div className='p-4'>
             <label>Select Raw Material:</label>
-            <select onChange={(e) => { setSelectedMaterial(e.target.value); handleMaterialChange(e.target.value); }}>
+            <select
+                value={selectedMaterial}
+                onChange={(e) => setSelectedMaterial(e.target.value)}
+                className='border p-2 rounded'
+            >
                 <option value="">Select...</option>
                 {rawMaterials.map(material => (
                     <option key={material._id} value={material._id}>
@@ -77,47 +98,50 @@ const Inventory = () => {
             </select>
 
             {selectedMaterial && (
-                <div>
-                    <h3>Data for {selectedMaterial}</h3>
-                    <table>
+                <div className='mt-4'>
+                    {/* <h3>Data for {selectedMaterial}</h3> */}
+                    <table className='min-w-full border border-gray-300'>
                         <thead>
                             <tr>
-                                <th>Date</th>
-                                <th>In Stock</th>
-                                <th>Stock Received</th>
-                                <th>Stock Used</th>
-                                <th>Stock Balance</th>
+                                <th className='border border-gray-300 p-2 text-xl'>Date</th>
+                                <th className='border border-gray-300 p-2 text-xl'>In Stock</th>
+                                <th className='border border-gray-300 p-2 text-xl'>Stock Received</th>
+                                <th className='border border-gray-300 p-2 text-xl'>Stock Used</th>
+                                <th className='border border-gray-300 p-2 text-xl'>Stock Balance</th>
                             </tr>
                         </thead>
                         <tbody>
                             {materialData?.map(entry => (
                                 <tr key={entry._id}>
-                                    <td>{entry.date}</td>
-                                    <td>{entry.inStock}</td>
-                                    <td>{entry.stockReceived}</td>
-                                    <td>{entry.stockUsed}</td>
-                                    <td>{entry.stockBalance}</td>
+                                    <td className='border border-gray-300 p-2 text-center text-lg'>{format(parseISO(entry.date), 'yyyy-MM-dd')}</td>
+                                    <td className='border border-gray-300 p-2 text-center text-lg'>{entry.inStock}</td>
+                                    <td className='border border-gray-300 p-2 text-center text-lg'>{entry.stockReceived}</td>
+                                    <td className='border border-gray-300 p-2 text-center text-lg'>{entry.stockUsed}</td>
+                                    <td className='border border-gray-300 p-2 text-center text-lg'>{entry.stockBalance}</td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
 
-                    <form onSubmit={handleInputData}>
-                        <label>
+                    <form onSubmit={handleSubmit}>
+                        <label className="block mb-2">
+                            Date:
+                            <DatePicker
+                                selected={formData.date}
+                                onChange={(date) => setFormData({ ...formData, date })}
+                            />
+                        </label>
+                        <label className="block mb-2">
                             In Stock:
-                            <input type="number" value={inStock} onChange={(e) => setInStock(e.target.value)} />
+                            <input type="number" value={formData.inStock} onChange={(e) => setFormData({ ...formData, inStock: e.target.value })} />
                         </label>
-                        <label>
+                        <label className="block mb-2">
                             Stock Received:
-                            <input type="number" value={stockReceived} onChange={(e) => setStockReceived(e.target.value)} />
+                            <input type="number" value={formData.stockReceived} onChange={(e) => setFormData({ ...formData, stockReceived: e.target.value })} />
                         </label>
-                        <label>
+                        <label className="block mb-2">
                             Stock Used:
-                            <input type="number" value={stockUsed} onChange={(e) => setStockUsed(e.target.value)} />
-                        </label>
-                        <label>
-                            Stock Balance:
-                            <input type="number" value={stockBalance} onChange={(e) => setStockBalance(e.target.value)} />
+                            <input type="number" value={formData.stockUsed} onChange={(e) => setFormData({ ...formData, stockUsed: e.target.value })} />
                         </label>
                         <button type="submit">Submit Data</button>
                     </form>

@@ -4,7 +4,7 @@ const rawMaterialsSchema = new mongoose.Schema({
     name: String,
     entry: [
         {
-            date: {type: Date, default: Date.now},
+            date: Date,
             inStock: Number,
             stockReceived: Number,
             stockUsed: Number,
