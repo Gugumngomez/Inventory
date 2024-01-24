@@ -6,10 +6,11 @@ import { parseISO, format } from 'date-fns';
 
 const Inventory = () => {
     const [rawMaterials, setRawMaterials] = useState([]);
-    const [selectedMaterial, setSelectedMaterial] = useState('65a63e409e4ff172aef6220b');
+    const [selectedMaterial, setSelectedMaterial] = useState('65af7d9aecda7317b4c804a3');
     const [materialData, setMaterialData] = useState([]);
-
-
+    const [latestStockBalance, setLatestStockBalance] = useState(0);
+    const [displayedMaterials, setDisplayedMaterials] = useState(10);
+    const [viewAll, setViewAll] = useState(false);
     // State variables for input data
     const [formData, setFormData] = useState({
         date: parseISO(new Date().toISOString().split('T')[0]),
@@ -19,6 +20,19 @@ const Inventory = () => {
         stockBalance: 0,
     });
 
+    const [isAddStockOpen, setIsAddStockOpen] = useState(false);
+
+    const openAddStock = () => {
+        setFormData({
+            ...formData,
+            inStock: latestStockBalance,
+        });
+        setIsAddStockOpen(true);
+    };
+
+    const closeAddStock = () => {
+        setIsAddStockOpen(false);
+    };
 
     useEffect(() => {
         // Fetch raw materials from the server
@@ -35,8 +49,18 @@ const Inventory = () => {
     const handleMaterialChange = async (materialId) => {
         // Fetch data for the selected raw material
         try {
-            const response = await axios.get(`http://localhost:4040/api/rawmaterials/${materialId}`);
-            setMaterialData(response.data.entry);
+            const response = await axios.get(`http://localhost:4040/api/rawMaterials/${materialId}`);
+            const materialEntries = response.data.entry;
+
+            if (materialEntries.length > 0) {
+                setLatestStockBalance(materialEntries[0].stockBalance);
+            } else {
+                setLatestStockBalance(0);
+            }
+
+            setMaterialData(materialEntries);
+
+
         } catch (error) {
             console.error(error);
         }
@@ -44,11 +68,21 @@ const Inventory = () => {
 
     const calculateStockBalance = () => {
         return (
-            parseInt(formData.inStock) +
+            parseInt(formData.inStock === 0 ? latestStockBalance : formData.inStock) +
             parseInt(formData.stockReceived) -
             parseInt(formData.stockUsed)
         );
     }
+
+    const handleViewAllToggle = () => {
+        setViewAll(!viewAll);
+        setDisplayedMaterials(viewAll ? 10 : rawMaterials.length);
+    };
+
+    const handleMaterialClick = (materialId) => {
+        setSelectedMaterial(materialId);
+        // Additional logic you might want to perform when a material is selected
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -76,77 +110,144 @@ const Inventory = () => {
                 stockReceived: 0,
                 stockUsed: 0,
             });
+
+            closeAddStock();
+
         } catch (error) {
             console.error(error);
         }
     };
 
     return (
-        <div className='p-4'>
-            <label>Select Raw Material:</label>
-            <select
-                value={selectedMaterial}
-                onChange={(e) => setSelectedMaterial(e.target.value)}
-                className='border p-2 rounded'
-            >
-                <option value="">Select...</option>
-                {rawMaterials.map(material => (
-                    <option key={material._id} value={material._id}>
-                        {material.name}
-                    </option>
-                ))}
-            </select>
-
-            {selectedMaterial && (
-                <div className='mt-4'>
-                    {/* <h3>Data for {selectedMaterial}</h3> */}
-                    <table className='min-w-full border border-gray-300'>
-                        <thead>
-                            <tr>
-                                <th className='border border-gray-300 p-2 text-xl'>Date</th>
-                                <th className='border border-gray-300 p-2 text-xl'>In Stock</th>
-                                <th className='border border-gray-300 p-2 text-xl'>Stock Received</th>
-                                <th className='border border-gray-300 p-2 text-xl'>Stock Used</th>
-                                <th className='border border-gray-300 p-2 text-xl'>Stock Balance</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {materialData?.map(entry => (
-                                <tr key={entry._id}>
-                                    <td className='border border-gray-300 p-2 text-center text-lg'>{format(parseISO(entry.date), 'yyyy-MM-dd')}</td>
-                                    <td className='border border-gray-300 p-2 text-center text-lg'>{entry.inStock}</td>
-                                    <td className='border border-gray-300 p-2 text-center text-lg'>{entry.stockReceived}</td>
-                                    <td className='border border-gray-300 p-2 text-center text-lg'>{entry.stockUsed}</td>
-                                    <td className='border border-gray-300 p-2 text-center text-lg'>{entry.stockBalance}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-
-                    <form onSubmit={handleSubmit}>
-                        <label className="block mb-2">
-                            Date:
-                            <DatePicker
-                                selected={formData.date}
-                                onChange={(date) => setFormData({ ...formData, date })}
-                            />
-                        </label>
-                        <label className="block mb-2">
-                            In Stock:
-                            <input type="number" value={formData.inStock} onChange={(e) => setFormData({ ...formData, inStock: e.target.value })} />
-                        </label>
-                        <label className="block mb-2">
-                            Stock Received:
-                            <input type="number" value={formData.stockReceived} onChange={(e) => setFormData({ ...formData, stockReceived: e.target.value })} />
-                        </label>
-                        <label className="block mb-2">
-                            Stock Used:
-                            <input type="number" value={formData.stockUsed} onChange={(e) => setFormData({ ...formData, stockUsed: e.target.value })} />
-                        </label>
-                        <button type="submit">Submit Data</button>
-                    </form>
+        <div className='flex'>
+            <div className='w-72 h-screen bg-gray-500 overflow-hidden text-white'>
+                <div className='overflow-y-auto h-full'>
+                    <h1 className='mt-3 pl-2 text-2xl'>Raw Materials:</h1>
+                    <ol className='pl-2 mt-4'>
+                        {rawMaterials.slice(0, displayedMaterials).map(material => (
+                            <li
+                                key={material._id}
+                                onClick={() => handleMaterialClick(material._id)}
+                                className='cursor-pointer hover:bg-orange-900 mt-2'
+                            >
+                                {material.itemNumber}
+                            </li>
+                        ))}
+                    </ol>
+                    <div className='flex justify-center items-center mt-2 text-xl'>
+                        <button onClick={handleViewAllToggle} className='text-gray-900 underline cursor-pointer'>
+                            {viewAll ? 'Less' : 'More'}
+                        </button>
+                    </div>
                 </div>
-            )}
+            </div>
+
+            <div className='m-3 p-3 w-full'>
+                <h1 className='mb-4 pb-2 text-5xl text-center font-bold'>Inventory Management</h1>
+
+                <div >
+                    {selectedMaterial && (
+                        <div className='mt-4'>
+                            {/* <h3>Data for {selectedMaterial}</h3> */}
+                            <table className='min-w-full border border-gray-300'>
+                                <thead>
+                                    <tr>
+                                        <th className='border border-gray-300 p-2 text-xl'>Date</th>
+                                        <th className='border border-gray-300 p-2 text-xl'>In Stock</th>
+                                        <th className='border border-gray-300 p-2 text-xl'>Stock Received</th>
+                                        <th className='border border-gray-300 p-2 text-xl'>Stock Used</th>
+                                        <th className='border border-gray-300 p-2 text-xl'>Stock Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {materialData?.map(entry => (
+                                        <tr key={entry._id}>
+                                            <td className='border border-gray-300 p-2 text-center text-lg'>{format(parseISO(entry.date), 'yyyy-MM-dd')}</td>
+                                            <td className='border border-gray-300 p-2 text-center text-lg'>{entry.inStock}</td>
+                                            <td className='border border-gray-300 p-2 text-center text-lg'>{entry.stockReceived}</td>
+                                            <td className='border border-gray-300 p-2 text-center text-lg'>{entry.stockUsed}</td>
+                                            <td className='border border-gray-300 p-2 text-center text-lg'>{entry.stockBalance}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                            <button onClick={openAddStock}
+                                className='mt-3 border p-1 rounded-md border-gray-300'
+                            >
+                                Add Stock
+                            </button>
+                        </div>
+
+                    )}
+                    {isAddStockOpen && (
+                        <div className=''>
+                            <div className='flex items-center justify-center'>
+                                <form onSubmit={handleSubmit}
+                                    className='mt-3 p-2 rounded-tl-lg shadow-2xl'
+                                >
+                                    <label className="block m-5 relative">
+                                        <DatePicker
+                                            selected={formData.date}
+                                            onChange={(date) => setFormData({ ...formData, date })}
+                                            className='px-4 py-2 text-lg outline-none border-2 border-gray-400 
+                                            rounded hover:border-gray-600 duration-200 peer focus:border-indigo-600 bg-inherit'
+                                        />
+                                        <span className='absolute left-2 top-[-8px] px-1 text-sm uppercase tracking-wide peer-focus:text-indigo-500 pointer-events-none duration-200 peer-focus:text-sm bg-white ml-2 peer-valid:text-sm'>
+                                            Date:
+                                        </span>
+                                    </label>
+
+
+                                    <label className="block m-5 relative">
+                                        <input
+                                            type="number"
+                                            value={formData.inStock === 0 ? '' : formData.inStock}
+                                            onChange={(e) => setFormData({ ...formData, inStock: e.target.value })}
+                                            className='px-4 py-2 text-lg outline-none border-2 border-gray-400 
+                                            rounded hover:border-gray-600 duration-200 peer focus:border-indigo-600 bg-inherit'
+                                        />
+                                        <span className='absolute left-2 top-[-8px] px-1 text-lg uppercase tracking-wide peer-focus:text-indigo-500 pointer-events-none duration-200 peer-focus:text-sm bg-white ml-2 peer-valid:text-sm'>
+                                            In Stock:
+                                        </span>
+                                    </label>
+
+
+                                    <label className="block m-5 relative">
+                                        <input
+                                            type="number"
+                                            value={formData.stockReceived}
+                                            onChange={(e) => setFormData({ ...formData, stockReceived: e.target.value })}
+                                            className='px-4 py-2 text-lg outline-none border-2 border-gray-400 
+                                            rounded hover:border-gray-600 duration-200 peer focus:border-indigo-600 bg-inherit'
+                                        />
+                                        <span className='absolute left-2 top-[-8px] px-1 text-lg uppercase tracking-wide peer-focus:text-indigo-500 pointer-events-none duration-200 peer-focus:text-sm bg-white ml-2 peer-valid:text-sm'>
+                                            Stock Received:
+                                        </span>
+                                    </label>
+
+
+                                    <label className="block m-5 relative">
+                                        <input
+                                            type="number"
+                                            value={formData.stockUsed}
+                                            onChange={(e) => setFormData({ ...formData, stockUsed: e.target.value })}
+                                            className='px-4 py-2 text-lg outline-none border-2 border-gray-400 
+                                            rounded hover:border-gray-600 duration-200 peer focus:border-indigo-600 bg-inherit'
+                                        />
+                                        <span className='absolute left-2 top-[-8px] px-1 text-lg uppercase tracking-wide peer-focus:text-indigo-500 pointer-events-none duration-200 peer-focus:text-sm bg-white ml-2 peer-valid:text-sm'>
+                                            Stock Used:
+                                        </span>
+                                    </label>
+
+
+                                    <button type="submit">Submit Data</button>
+                                </form>
+                                <button onClick={closeAddStock}>close</button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
     );
 };

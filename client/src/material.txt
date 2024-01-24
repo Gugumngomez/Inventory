@@ -111,3 +111,47 @@ app.get('/api/rawMaterials/:name/entries', async (req, res) => {
 });
 
 
+// app.post('/api/materialProperties', async (req, res) => {
+//     try {
+//         const rawMaterials = [
+//             { name: "RM - 004 Scrap Ext", entry: [] },
+//             { name: "RM - 010 Scrap Ext", entry: [] },
+//             { name: "RM - 100 Scrap", entry: [] },
+//             { name: "RM - 100 Starter Bars", entry: [] },
+//             { name: "RM - 101 Settler", entry: [] },
+//             { name: "RM - 304 Scrap Ext", entry: [] },
+//             { name: "RM - 319 Scrap Ext", entry: [] },
+//             { name: "RM - 400 Scrap", entry: [] },
+//             { name: "RM - 500 Scrap", entry: [] },
+//             { name: "RM - 501 Settler", entry: [] },
+//             { name: "RM - 600 Scrap", entry: [] },
+//             { name: "RM - 622", entry: [] },
+//             { name: "RM - 631", entry: [] },
+//             { name: "RM - 632", entry: [] },
+//             { name: "RM - 633", entry: [] },
+//             { name: "RM - 645", entry: [] },
+//             { name: "RM - 648", entry: [] },
+//             { name: "RM - 661 Ext", entry: [] },
+//             { name: "RM - 675", entry: [] },
+//             { name: "RM - 681 Ext", entry: [] },
+//             { name: "RM - 685", entry: [] },
+//             { name: "RM - 686", entry: [] },
+//             { name: "RM - 687", entry: [] },
+//             { name: "RM - 689", entry: [] },
+//             { name: "RM - 693 Ext", entry: [] },
+//             { name: "RM - 694 Ext", entry: [] },
+//             { name: "RM - 696 Ext", entry: [] },
+//             { name: "RM - 671 Settler", entry: [] },
+//         ];
+
+//         await RawMaterial.create(rawMaterials);
+
+
+//         res.status(201).json({ message: 'Materials created successfully' });
+
+
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ error: 'Internal Server Error' });
+//     }
+// });

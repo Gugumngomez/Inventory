@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
 
 const rawMaterialsSchema = new mongoose.Schema({
-    name: String,
+    itemNumber: String,
+    itemName: String,
     entry: [
         {
             date: Date,
