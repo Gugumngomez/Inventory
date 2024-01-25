@@ -23,10 +23,10 @@ const Inventory = () => {
     const [isAddStockOpen, setIsAddStockOpen] = useState(false);
 
     const openAddStock = () => {
-        setFormData({
-            ...formData,
+        setFormData((prevFormData) => ({
+            ...prevFormData,
             inStock: latestStockBalance,
-        });
+        }));
         setIsAddStockOpen(true);
     };
 
@@ -52,11 +52,19 @@ const Inventory = () => {
             const response = await axios.get(`http://localhost:4040/api/rawMaterials/${materialId}`);
             const materialEntries = response.data.entry;
 
-            if (materialEntries.length > 0) {
-                setLatestStockBalance(materialEntries[0].stockBalance);
-            } else {
-                setLatestStockBalance(0);
+            let yesterdayStockBalance = 0;
+
+            if (materialEntries.length > 1) {
+                yesterdayStockBalance = materialEntries[1].stockBalance; // Set to the stock balance of yesterday
             }
+
+            setLatestStockBalance(yesterdayStockBalance);
+
+            // Update formData to set inStock to yesterday's stockBalance
+            setFormData((prevFormData) => ({
+                ...prevFormData,
+                inStock: yesterdayStockBalance,
+            }));
 
             setMaterialData(materialEntries);
 
@@ -128,7 +136,7 @@ const Inventory = () => {
                             <li
                                 key={material._id}
                                 onClick={() => handleMaterialClick(material._id)}
-                                className='cursor-pointer hover:bg-orange-900 mt-2'
+                                className={`cursor-pointer hover:bg-orange-900 mt-2 ${selectedMaterial === material._id ? 'bg-blue-500' : ''}`}
                             >
                                 {material.itemNumber}
                             </li>
@@ -139,6 +147,7 @@ const Inventory = () => {
                             {viewAll ? 'Less' : 'More'}
                         </button>
                     </div>
+                    <div className='m-2 text-xl'>Summary</div>
                 </div>
             </div>
 
@@ -172,7 +181,7 @@ const Inventory = () => {
                                 </tbody>
                             </table>
                             <button onClick={openAddStock}
-                                className='mt-3 border p-1 rounded-md border-gray-300'
+                                className={`mt-3 border p-1 rounded-md border-gray-300 ${isAddStockOpen ? 'hidden' : ''} `}
                             >
                                 Add Stock
                             </button>
@@ -185,7 +194,13 @@ const Inventory = () => {
                                 <form onSubmit={handleSubmit}
                                     className='mt-3 p-2 rounded-tl-lg shadow-2xl'
                                 >
-                                    <label className="block m-5 relative">
+                                    <button
+                                        onClick={closeAddStock}
+                                        className='m-2 text-2xl'
+                                    >
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                    <label className="block m-8 relative">
                                         <DatePicker
                                             selected={formData.date}
                                             onChange={(date) => setFormData({ ...formData, date })}
@@ -198,7 +213,7 @@ const Inventory = () => {
                                     </label>
 
 
-                                    <label className="block m-5 relative">
+                                    <label className="block m-8 relative">
                                         <input
                                             type="number"
                                             value={formData.inStock === 0 ? '' : formData.inStock}
@@ -212,7 +227,7 @@ const Inventory = () => {
                                     </label>
 
 
-                                    <label className="block m-5 relative">
+                                    <label className="block m-8 relative">
                                         <input
                                             type="number"
                                             value={formData.stockReceived}
@@ -226,7 +241,7 @@ const Inventory = () => {
                                     </label>
 
 
-                                    <label className="block m-5 relative">
+                                    <label className="block m-8 relative">
                                         <input
                                             type="number"
                                             value={formData.stockUsed}
@@ -239,10 +254,14 @@ const Inventory = () => {
                                         </span>
                                     </label>
 
-
-                                    <button type="submit">Submit Data</button>
+                                    <button
+                                        type="submit"
+                                        className=' bg-gray-500 p-2 m-2 rounded-full'
+                                    >
+                                        Submit Data
+                                    </button>
                                 </form>
-                                <button onClick={closeAddStock}>close</button>
+
                             </div>
                         </div>
                     )}
