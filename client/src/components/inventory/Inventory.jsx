@@ -3,7 +3,7 @@ import axios from 'axios';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { parseISO, format } from 'date-fns';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom'
 
 const Inventory = () => {
     const [rawMaterials, setRawMaterials] = useState([]);
@@ -11,9 +11,8 @@ const Inventory = () => {
     const [materialData, setMaterialData] = useState([]);
     const [latestStockBalance, setLatestStockBalance] = useState(0);
     const [displayedMaterials, setDisplayedMaterials] = useState(10);
-    const [viewAll, setViewAll] = useState(false);
-
     const navigate = useNavigate();
+    const [viewAll, setViewAll] = useState(false);
     // State variables for input data
     const [formData, setFormData] = useState({
         date: parseISO(new Date().toISOString().split('T')[0]),
@@ -26,10 +25,21 @@ const Inventory = () => {
     const [isAddStockOpen, setIsAddStockOpen] = useState(false);
 
     const openAddStock = () => {
-        setFormData((prevFormData) => ({
-            ...prevFormData,
-            inStock: latestStockBalance,
-        }));
+        const lastEntry = materialData.length > 0 ? materialData[materialData.length - 1] : null;
+
+        if (lastEntry) {
+            setFormData((prevFormData) => ({
+                ...prevFormData,
+                inStock: lastEntry.stockBalance,
+            }));
+        } else {
+            // If there are no entries, set inStock to 0 or any default value
+            setFormData((prevFormData) => ({
+                ...prevFormData,
+                inStock: 0,
+            }));
+        }
+
         setIsAddStockOpen(true);
     };
 
@@ -160,7 +170,7 @@ const Inventory = () => {
                             {viewAll ? 'Less' : 'More'}
                         </button>
                     </div>
-                    <button onClick={() => navigate('/summary')} className='m-2 text-xl cursor-pointer'>Summary</button>
+                    <div className='m-2 text-xl cursor-pointer' onClick={() => navigate('/summary')}>Summary</div>
                 </div>
             </div>
 
