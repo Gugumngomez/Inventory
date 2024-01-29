@@ -3,6 +3,7 @@ import axios from 'axios';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { parseISO, format } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 
 const Inventory = () => {
     const [rawMaterials, setRawMaterials] = useState([]);
@@ -11,6 +12,8 @@ const Inventory = () => {
     const [latestStockBalance, setLatestStockBalance] = useState(0);
     const [displayedMaterials, setDisplayedMaterials] = useState(10);
     const [viewAll, setViewAll] = useState(false);
+
+    const navigate = useNavigate();
     // State variables for input data
     const [formData, setFormData] = useState({
         date: parseISO(new Date().toISOString().split('T')[0]),
@@ -54,8 +57,18 @@ const Inventory = () => {
 
             let yesterdayStockBalance = 0;
 
-            if (materialEntries.length > 1) {
-                yesterdayStockBalance = materialEntries[1].stockBalance; // Set to the stock balance of yesterday
+            if (materialEntries.length > 0) {
+                const todayEntry = materialEntries.find(entry => {
+                    const entryDate = new Date(entry.date).toDateString();
+                    const todayDate = new Date().toDateString();
+                    return entryDate === todayDate;
+                });
+
+                if (todayEntry) {
+                    yesterdayStockBalance = todayEntry.stockBalance;
+                } else {
+                    yesterdayStockBalance = materialEntries[0].stockBalance; // Use the latest entry
+                }
             }
 
             setLatestStockBalance(yesterdayStockBalance);
@@ -147,7 +160,7 @@ const Inventory = () => {
                             {viewAll ? 'Less' : 'More'}
                         </button>
                     </div>
-                    <div className='m-2 text-xl'>Summary</div>
+                    <button onClick={() => navigate('/summary')} className='m-2 text-xl cursor-pointer'>Summary</button>
                 </div>
             </div>
 
