@@ -159,7 +159,7 @@ const Inventory = () => {
                             <li
                                 key={material._id}
                                 onClick={() => handleMaterialClick(material._id)}
-                                className={`cursor-pointer hover:bg-orange-900 mt-2 ${selectedMaterial === material._id ? 'bg-blue-500' : ''}`}
+                                className={`cursor-pointer hover:bg-indigo-400 mt-2 ${selectedMaterial === material._id ? 'bg-slate-700' : ''}`}
                             >
                                 {material.itemNumber}
                             </li>
