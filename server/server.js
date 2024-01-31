@@ -41,6 +41,7 @@ app.get('/api/rawmaterials/:id', async (req, res) => {
 });
 
 
+
 app.post('/api/rawMaterials/:id/entry', async (req, res) => {
     const materialId = req.params.id;
     const entryData = req.body;
