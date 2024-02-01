@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 4040;
 
 app.use(cors(
     {
-        origin: ["https://inventory.vercel.app"],
+        origin: ["http://localhost:4040/api"],
         methods: ["POST", "GET"],
         credentials: true
     }
@@ -24,7 +24,7 @@ mongoose.connect("mongodb+srv://gugulethu:Superman1!@atlascluster.kvdittq.mongod
     useUnifiedTopology: true,
 });
 
-app.get('/', (req, res) => {
+app.get('/api', (req, res) => {
     res.json("Hello");
 })
 app.get('/api/rawMaterials', async (req, res) => {
