@@ -24,7 +24,9 @@ mongoose.connect("mongodb+srv://gugulethu:Superman1!@atlascluster.kvdittq.mongod
     useUnifiedTopology: true,
 });
 
-
+app.get('/', (req, res) => {
+    res.json("Hello");
+})
 app.get('/api/rawMaterials', async (req, res) => {
     try {
         const rawMaterials = await RawMaterial.find();
