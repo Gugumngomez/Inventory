@@ -8,13 +8,7 @@ const app = express();
 
 const PORT = process.env.PORT || 4040;
 
-app.use(cors(
-    {
-        origin: ["http://localhost:4040/api"],
-        methods: ["POST", "GET"],
-        credentials: true
-    }
-));
+app.use(cors());
 
 app.use(bodyParser.json());
 
