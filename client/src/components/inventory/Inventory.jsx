@@ -13,6 +13,8 @@ const Inventory = () => {
     const [displayedMaterials, setDisplayedMaterials] = useState(10);
     const navigate = useNavigate();
     const [viewAll, setViewAll] = useState(false);
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const [editEntryId, setEditEntryId] = useState(null);
     // State variables for input data
     const [formData, setFormData] = useState({
         date: parseISO(new Date().toISOString().split('T')[0]),
@@ -114,6 +116,69 @@ const Inventory = () => {
         setSelectedMaterial(materialId);
         // Additional logic you might want to perform when a material is selected
     };
+    const openEditForm = (entryId) => {
+        const entryToEdit = materialData.find((entry) => entry._id === entryId);
+
+        setEditEntryId(entryId);
+
+        setFormData({
+            date: parseISO(entryToEdit.date),
+            inStock: entryToEdit.inStock,
+            stockReceived: entryToEdit.stockReceived,
+            stockUsed: entryToEdit.stockUsed,
+        });
+
+        setIsEditOpen(true);
+    };
+
+    // Function to close the edit form
+    const closeEditForm = () => {
+        setIsEditOpen(false);
+        setEditEntryId(null);
+        setFormData({
+            date: parseISO(new Date().toISOString().split('T')[0]),
+            inStock: 0,
+            stockReceived: 0,
+            stockUsed: 0,
+        });
+    };
+
+    const handleDelete = async (entryId) => {
+        try {
+            await axios.delete(`http://localhost:4040/api/rawMaterials/${selectedMaterial}/entry/${entryId}/delete`);
+            // Refresh data after deletion
+            handleMaterialChange(selectedMaterial);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    // Function to handle the edit form submission
+    const handleEditSubmit = async (e) => {
+        e.preventDefault();
+
+        const stockBalance = calculateStockBalance();
+
+        const editedData = {
+            date: format(formData.date, 'yyyy-MM-dd'),
+            inStock: formData.inStock,
+            stockReceived: formData.stockReceived,
+            stockUsed: formData.stockUsed,
+            stockBalance: stockBalance,
+        };
+
+        try {
+            await axios.put(`http://localhost:4040/api/rawMaterials/${selectedMaterial}/entry/${editEntryId}/edit`, editedData);
+            // Refresh data after editing
+            handleMaterialChange(selectedMaterial);
+
+            // Clear input fields and close edit form
+            closeEditForm();
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -199,14 +264,22 @@ const Inventory = () => {
                                             <td className='border border-gray-300 p-2 text-center text-lg'>{entry.stockReceived}</td>
                                             <td className='border border-gray-300 p-2 text-center text-lg'>{entry.stockUsed}</td>
                                             <td className='border border-gray-300 p-2 text-center text-lg'>{entry.stockBalance}</td>
+                                            <td className='border border-gray-300 p-2 text-center text-lg'>
+                                                <button onClick={() => openEditForm(entry._id)} className='text-indigo-500 hover:underline'>
+                                                    Edit
+                                                </button>
+                                            </td>
+                                            <td className='border border-gray-300 p-2 text-center text-lg'>
+                                                <button onClick={() => handleDelete(entry._id)} className='text-red-500 hover:underline'>
+                                                    Delete
+                                                </button>
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
-                            <button onClick={openAddStock}
-                                className={`mt-3 border p-1 rounded-md border-gray-300 ${isAddStockOpen ? 'hidden' : ''} `}
-                            >
-                                Add Stock
+                            <button onClick={isEditOpen ? closeEditForm : openAddStock} className={`mt-3 border p-1 rounded-md border-gray-300 ${isEditOpen ? 'hidden' : ''}`}>
+                                {isEditOpen ? 'Cancel Edit' : 'Add Stock'}
                             </button>
                         </div>
 
@@ -285,6 +358,68 @@ const Inventory = () => {
                                     </button>
                                 </form>
 
+                            </div>
+                        </div>
+                    )}
+                    {isEditOpen && (
+                        <div className=''>
+                            <div className='flex items-center justify-center'>
+                                <form onSubmit={handleEditSubmit} className='mt-3 p-2 rounded-tl-lg shadow-2xl'>
+                                    <label className="block m-8 relative">
+                                        <DatePicker
+                                            selected={formData.date}
+                                            onChange={(date) => setFormData({ ...formData, date })}
+                                            className='px-4 py-2 text-lg outline-none border-2 border-gray-400 
+                        rounded hover:border-gray-600 duration-200 peer focus:border-indigo-600 bg-inherit'
+                                        />
+                                        <span className='absolute left-2 top-[-8px] px-1 text-sm uppercase tracking-wide peer-focus:text-indigo-500 pointer-events-none duration-200 peer-focus:text-sm bg-white ml-2 peer-valid:text-sm'>
+                                            Date:
+                                        </span>
+                                    </label>
+
+                                    <label className="block m-8 relative">
+                                        <input
+                                            type="number"
+                                            value={formData.inStock}
+                                            onChange={(e) => setFormData({ ...formData, inStock: e.target.value })}
+                                            className='px-4 py-2 text-lg outline-none border-2 border-gray-400 
+                        rounded hover:border-gray-600 duration-200 peer focus:border-indigo-600 bg-inherit'
+                                        />
+                                        <span className='absolute left-2 top-[-8px] px-1 text-lg uppercase tracking-wide peer-focus:text-indigo-500 pointer-events-none duration-200 peer-focus:text-sm bg-white ml-2 peer-valid:text-sm'>
+                                            In Stock:
+                                        </span>
+                                    </label>
+
+                                    <label className="block m-8 relative">
+                                        <input
+                                            type="number"
+                                            value={formData.stockReceived}
+                                            onChange={(e) => setFormData({ ...formData, stockReceived: e.target.value })}
+                                            className='px-4 py-2 text-lg outline-none border-2 border-gray-400 
+                        rounded hover:border-gray-600 duration-200 peer focus:border-indigo-600 bg-inherit'
+                                        />
+                                        <span className='absolute left-2 top-[-8px] px-1 text-lg uppercase tracking-wide peer-focus:text-indigo-500 pointer-events-none duration-200 peer-focus:text-sm bg-white ml-2 peer-valid:text-sm'>
+                                            Stock Received:
+                                        </span>
+                                    </label>
+
+                                    <label className="block m-8 relative">
+                                        <input
+                                            type="number"
+                                            value={formData.stockUsed}
+                                            onChange={(e) => setFormData({ ...formData, stockUsed: e.target.value })}
+                                            className='px-4 py-2 text-lg outline-none border-2 border-gray-400 
+                        rounded hover:border-gray-600 duration-200 peer focus:border-indigo-600 bg-inherit'
+                                        />
+                                        <span className='absolute left-2 top-[-8px] px-1 text-lg uppercase tracking-wide peer-focus:text-indigo-500 pointer-events-none duration-200 peer-focus:text-sm bg-white ml-2 peer-valid:text-sm'>
+                                            Stock Used:
+                                        </span>
+                                    </label>
+
+                                    <button type="submit" className='bg-gray-500 p-2 m-2 rounded-full'>
+                                        Save Changes
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     )}

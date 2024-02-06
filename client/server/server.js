@@ -18,9 +18,6 @@ mongoose.connect("mongodb+srv://gugulethu:Superman1!@atlascluster.kvdittq.mongod
     useUnifiedTopology: true,
 });
 
-app.get('/api', (req, res) => {
-    res.json("Hello");
-})
 app.get('/api/rawMaterials', async (req, res) => {
     try {
         const rawMaterials = await RawMaterial.find();
@@ -43,7 +40,6 @@ app.get('/api/rawmaterials/:id', async (req, res) => {
 });
 
 
-
 app.post('/api/rawMaterials/:id/entry', async (req, res) => {
     const materialId = req.params.id;
     const entryData = req.body;
@@ -56,6 +52,56 @@ app.post('/api/rawMaterials/:id/entry', async (req, res) => {
         );
 
         res.status(201).json(updatedMaterial);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+
+// Add a new route for editing a raw material entry
+app.put('/api/rawMaterials/:materialId/entry/:entryId/edit', async (req, res) => {
+    const materialId = req.params.materialId;
+    const entryId = req.params.entryId;
+    const updatedData = req.body;
+
+    try {
+        const updatedMaterial = await RawMaterial.findOneAndUpdate(
+            { _id: materialId, 'entry._id': entryId },
+            {
+                $set: {
+                    'entry.$.date': updatedData.date,
+                    'entry.$.inStock': updatedData.inStock,
+                    'entry.$.stockReceived': updatedData.stockReceived,
+                    'entry.$.stockUsed': updatedData.stockUsed,
+                    'entry.$.stockBalance': updatedData.stockBalance,
+                },
+            },
+            { new: true }
+        );
+
+        res.status(200).json(updatedMaterial);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+
+app.delete('/api/rawMaterials/:id/entry/:entryId/delete', async (req, res) => {
+    const { id: materialId, entryId } = req.params;
+
+    try {
+        // Find the raw material by ID
+        const rawMaterial = await RawMaterial.findById(materialId);
+
+        // Remove the entry with the specified ID
+        rawMaterial.entry.pull({ _id: entryId });
+
+        // Save the updated raw material
+        await rawMaterial.save();
+
+        res.status(204).send();  // No content response for successful deletion
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Internal Server Error' });
