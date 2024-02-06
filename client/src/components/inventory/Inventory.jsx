@@ -51,7 +51,7 @@ const Inventory = () => {
 
     useEffect(() => {
         // Fetch raw materials from the server
-        axios.get('http://localhost:4040/api/rawmaterials')
+        axios.get('http://172.105.135.219:4040/api/rawmaterials')
             .then(response => setRawMaterials(response.data))
             .catch(error => console.error(error));
     }, []);
@@ -64,7 +64,7 @@ const Inventory = () => {
     const handleMaterialChange = async (materialId) => {
         // Fetch data for the selected raw material
         try {
-            const response = await axios.get(`http://localhost:4040/api/rawMaterials/${materialId}`);
+            const response = await axios.get(`http://172.105.135.219:4040/api/rawMaterials/${materialId}`);
             const materialEntries = response.data.entry;
 
             let yesterdayStockBalance = 0;
@@ -152,7 +152,7 @@ const Inventory = () => {
         }
         
         try {
-            await axios.delete(`http://localhost:4040/api/rawMaterials/${selectedMaterial}/entry/${entryId}/delete`);
+            await axios.delete(`http://172.105.135.219:4040/api/rawMaterials/${selectedMaterial}/entry/${entryId}/delete`);
             // Refresh data after deletion
             handleMaterialChange(selectedMaterial);
         } catch (error) {
@@ -175,7 +175,7 @@ const Inventory = () => {
         };
 
         try {
-            await axios.put(`http://localhost:4040/api/rawMaterials/${selectedMaterial}/entry/${editEntryId}/edit`, editedData);
+            await axios.put(`http://172.105.135.219:4040/api/rawMaterials/${selectedMaterial}/entry/${editEntryId}/edit`, editedData);
             // Refresh data after editing
             handleMaterialChange(selectedMaterial);
 
@@ -202,7 +202,7 @@ const Inventory = () => {
         };
 
         try {
-            await axios.post(`http://localhost:4040/api/rawMaterials/${selectedMaterial}/entry`, inputData);
+            await axios.post(`http://172.105.135.219:4040/api/rawMaterials/${selectedMaterial}/entry`, inputData);
             // Refresh data after submitting
             handleMaterialChange(selectedMaterial);
 

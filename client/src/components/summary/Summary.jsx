@@ -11,7 +11,7 @@ const Summary = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        axios.get('http://localhost:4040/api/rawmaterials')
+        axios.get('http://172.105.135.219:4040/api/rawmaterials')
             .then(res => setData(res.data))
             .catch(er => console.error(er));
     }, []);
