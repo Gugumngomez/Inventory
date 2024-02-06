@@ -144,6 +144,13 @@ const Inventory = () => {
     };
 
     const handleDelete = async (entryId) => {
+        const confirmDelete = window.confirm('Are you sure you want to delete this entry?');
+
+        if (!confirmDelete) {
+            // If the user cancels the deletion, exit the function
+            return;
+        }
+        
         try {
             await axios.delete(`http://localhost:4040/api/rawMaterials/${selectedMaterial}/entry/${entryId}/delete`);
             // Refresh data after deletion
@@ -254,6 +261,7 @@ const Inventory = () => {
                                         <th className='border border-gray-300 p-2 text-xl'>Stock Received</th>
                                         <th className='border border-gray-300 p-2 text-xl'>Stock Used</th>
                                         <th className='border border-gray-300 p-2 text-xl'>Stock Balance</th>
+                                        <th className='border border-gray-300 p-2 text-xl'>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -265,15 +273,14 @@ const Inventory = () => {
                                             <td className='border border-gray-300 p-2 text-center text-lg'>{entry.stockUsed}</td>
                                             <td className='border border-gray-300 p-2 text-center text-lg'>{entry.stockBalance}</td>
                                             <td className='border border-gray-300 p-2 text-center text-lg'>
-                                                <button onClick={() => openEditForm(entry._id)} className='text-indigo-500 hover:underline'>
-                                                    Edit
+                                                <button onClick={() => openEditForm(entry._id)} className='text-indigo-500 hover:underline text-xl mr-5'>
+                                                    <i class="fa-regular fa-pen-to-square"></i>
+                                                </button>
+                                                <button onClick={() => handleDelete(entry._id)} className='text-red-500 hover:underline text-xl'>
+                                                    <i class="fa-solid fa-trash"></i>
                                                 </button>
                                             </td>
-                                            <td className='border border-gray-300 p-2 text-center text-lg'>
-                                                <button onClick={() => handleDelete(entry._id)} className='text-red-500 hover:underline'>
-                                                    Delete
-                                                </button>
-                                            </td>
+
                                         </tr>
                                     ))}
                                 </tbody>
@@ -365,6 +372,12 @@ const Inventory = () => {
                         <div className=''>
                             <div className='flex items-center justify-center'>
                                 <form onSubmit={handleEditSubmit} className='mt-3 p-2 rounded-tl-lg shadow-2xl'>
+                                    <button
+                                        onClick={closeEditForm}
+                                        className='m-2 text-2xl'
+                                    >
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
                                     <label className="block m-8 relative">
                                         <DatePicker
                                             selected={formData.date}
