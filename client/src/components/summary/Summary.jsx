@@ -59,21 +59,22 @@ const Summary = () => {
                     </thead>
                     <tbody>
                         {data.map((item, index) => {
-                            const latestEntry = item.entry[item.entry.length - 1];
+                            const entriesWithinRange = item.entry.filter(entry => {
+                                const entryDate = new Date(entry.date).toLocaleDateString();
+                                return entryDate === new Date(startDate).toLocaleDateString() && (!endDate || entryDate <= new Date(endDate).toLocaleDateString());
+                            });
 
-                            if (latestEntry && latestEntry.date) {
-                                const entryDate = new Date(latestEntry.date).toISOString().split('T')[0];
+                            const latestEntry = entriesWithinRange[entriesWithinRange.length - 1];
 
-                                if (entryDate === startDate) {
-                                    return (
-                                        <tr key={`${index}-${latestEntry._id}`}>
-                                            <td className='border border-gray-300 p-2 text-center text-md'>{new Date(latestEntry.date).toLocaleDateString()}</td>
-                                            <td className='border border-gray-300 p-2 text-center text-md'>{item.itemNumber}</td>
-                                            <td className='border border-gray-300 p-2 text-center text-md'>{item.itemName}</td>
-                                            <td className='border border-gray-300 p-2 text-center text-md'>{latestEntry.stockBalance}</td>
-                                        </tr>
-                                    );
-                                }
+                            if (latestEntry) {
+                                return (
+                                    <tr key={`${index}-${latestEntry._id}`}>
+                                        <td className='border border-gray-300 p-2 text-center text-md'>{new Date(latestEntry.date).toLocaleDateString()}</td>
+                                        <td className='border border-gray-300 p-2 text-center text-md'>{item.itemNumber}</td>
+                                        <td className='border border-gray-300 p-2 text-center text-md'>{item.itemName}</td>
+                                        <td className='border border-gray-300 p-2 text-center text-md'>{latestEntry.stockBalance}</td>
+                                    </tr>
+                                );
                             }
 
                             return null;
