@@ -5,7 +5,9 @@ import { useNavigate } from 'react-router-dom';
 
 const Summary = () => {
     const [data, setData] = useState([]);
-    const [startDate, setStartDate] = useState('');
+    const today = new Date();
+    const startDateString = today.toISOString().split('T')[0];
+    const [startDate, setStartDate] = useState(startDateString);
     const [endDate, setEndDate] = useState('');
     const componentRef = useRef();
     const navigate = useNavigate();
@@ -56,23 +58,26 @@ const Summary = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {data.map((item, index) => (
-                            item.entry.map((entry, subIndex) => {
-                                const entryDate = entry.date && entry.date.split('T')[0]; // Extract date part from ISO string
-                                const start = startDate;
-                                const end = endDate;
+                        {data.map((item, index) => {
+                            const latestEntry = item.entry[item.entry.length - 1];
 
-                                return (!start || entryDate >= start) &&
-                                    (!end || entryDate <= end) ? (
-                                    <tr key={`${index}-${subIndex}`}>
-                                        <td className='border border-gray-300 p-2 text-center text-md'>{new Date(entry.date).toLocaleDateString()}</td>
-                                        <td className='border border-gray-300 p-2 text-center text-md'>{item.itemNumber}</td>
-                                        <td className='border border-gray-300 p-2 text-center text-md'>{item.itemName}</td>
-                                        <td className='border border-gray-300 p-2 text-center text-md'>{entry.stockBalance}</td>
-                                    </tr>
-                                ) : null;
-                            })
-                        ))}
+                            if (latestEntry && latestEntry.date) {
+                                const entryDate = new Date(latestEntry.date).toISOString().split('T')[0];
+
+                                if (entryDate === startDate) {
+                                    return (
+                                        <tr key={`${index}-${latestEntry._id}`}>
+                                            <td className='border border-gray-300 p-2 text-center text-md'>{new Date(latestEntry.date).toLocaleDateString()}</td>
+                                            <td className='border border-gray-300 p-2 text-center text-md'>{item.itemNumber}</td>
+                                            <td className='border border-gray-300 p-2 text-center text-md'>{item.itemName}</td>
+                                            <td className='border border-gray-300 p-2 text-center text-md'>{latestEntry.stockBalance}</td>
+                                        </tr>
+                                    );
+                                }
+                            }
+
+                            return null;
+                        })}
                     </tbody>
                 </table>
             </div>
