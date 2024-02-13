@@ -66,26 +66,31 @@ const Summary = () => {
 
                             const latestEntry = entriesWithinRange[entriesWithinRange.length - 1];
 
-                            if (latestEntry) {
-                                return (
-                                    <tr key={`${index}-${latestEntry._id}`}>
-                                        <td className='border border-gray-300 p-2 text-center text-md'>{new Date(latestEntry.date).toLocaleDateString()}</td>
-                                        <td className='border border-gray-300 p-2 text-center text-md'>{item.itemNumber}</td>
-                                        <td className='border border-gray-300 p-2 text-center text-md'>{item.itemName}</td>
-                                        <td className='border border-gray-300 p-2 text-center text-md'>{latestEntry.stockBalance}</td>
-                                    </tr>
-                                );
-                            }
-
-                            return null;
+                            return (
+                                <tr key={`${index}-${latestEntry ? latestEntry._id : 'no-entry'}`}>
+                                    <td className='border border-gray-300 p-2 text-center text-md'>
+                                        {latestEntry ? new Date(latestEntry.date).toLocaleDateString() : ' '}
+                                    </td>
+                                    <td className='border border-gray-300 p-2 text-center text-md'>
+                                        {item.itemNumber}
+                                    </td>
+                                    <td className='border border-gray-300 p-2 text-center text-md'>
+                                        {item.itemName}
+                                    </td>
+                                    <td className='border border-gray-300 p-2 text-center text-md'>
+                                        {latestEntry ? latestEntry.stockBalance : '-'}
+                                    </td>
+                                </tr>
+                            );
                         })}
                     </tbody>
                 </table>
             </div>
             <button
                 onClick={() => navigate('/')}
-                className='ml-7 mb-3 border p-1 rounded-md border-gray-300'
-            >Home</button>
+                className='ml-7 mb-3 border p-1 rounded-md border-gray-300'>
+                Home
+            </button>
 
         </div>
     );
