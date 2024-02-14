@@ -5,9 +5,7 @@ import { useNavigate } from 'react-router-dom';
 
 const Summary = () => {
     const [data, setData] = useState([]);
-    const today = new Date();
-    const startDateString = today.toISOString().split('T')[0];
-    const [startDate, setStartDate] = useState(startDateString);
+    const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const componentRef = useRef();
     const navigate = useNavigate();
@@ -59,12 +57,8 @@ const Summary = () => {
                     </thead>
                     <tbody>
                         {data.map((item, index) => {
-                            const entriesWithinRange = item.entry.filter(entry => {
-                                const entryDate = new Date(entry.date).toLocaleDateString();
-                                return entryDate === new Date(startDate).toLocaleDateString() && (!endDate || entryDate <= new Date(endDate).toLocaleDateString());
-                            });
-
-                            const latestEntry = entriesWithinRange[entriesWithinRange.length - 1];
+                            // Find the latest entry for each item
+                            const latestEntry = item.entry[item.entry.length - 1];
 
                             return (
                                 <tr key={`${index}-${latestEntry ? latestEntry._id : 'no-entry'}`}>
@@ -88,9 +82,8 @@ const Summary = () => {
             </div>
             <button
                 onClick={() => navigate('/')}
-                className='ml-7 mb-3 border p-1 rounded-md border-gray-300'>
-                Home
-            </button>
+                className='ml-7 mb-3 border p-1 rounded-md border-gray-300'
+            >Home</button>
 
         </div>
     );
