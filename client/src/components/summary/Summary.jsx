@@ -5,10 +5,10 @@ import { useNavigate } from 'react-router-dom';
 
 const Summary = () => {
     const [data, setData] = useState([]);
-    const today = new Date();
-    const startDateString = today.toISOString().split('T')[0];
-    const [startDate, setStartDate] = useState(startDateString);
-    const [endDate, setEndDate] = useState('');
+    // const today = new Date();
+    // const startDateString = today.toISOString().split('T')[0];
+    const [startDate, setStartDate] = useState('');
+    // const [endDate, setEndDate] = useState('');
     const componentRef = useRef();
     const navigate = useNavigate();
 
@@ -28,7 +28,7 @@ const Summary = () => {
 
             />
             <div className='ml-6 p-1'>
-                <label>Start Date:</label>
+                <label>Select Date:</label>
                 <input
                     type="date"
                     value={startDate}
@@ -36,7 +36,7 @@ const Summary = () => {
                     className='pl-2'
                 />
             </div>
-            <div className='ml-6 p-1'>
+            {/* <div className='ml-6 p-1'>
                 <label>End Date:</label>
                 <input
                     type="date"
@@ -44,7 +44,7 @@ const Summary = () => {
                     onChange={(e) => setEndDate(e.target.value)}
                     className='pl-2'
                 />
-            </div>
+            </div> */}
 
             <div className='p-3 m-4' ref={componentRef}>
                 <h1 className='text-center text-2xl mb-4 font-bold'>Stock on Hand</h1>
@@ -61,23 +61,23 @@ const Summary = () => {
                         {data.map((item, index) => {
                             const entriesWithinRange = item.entry.filter(entry => {
                                 const entryDate = new Date(entry.date).toLocaleDateString();
-                                return entryDate === new Date(startDate).toLocaleDateString() && (!endDate || entryDate <= new Date(endDate).toLocaleDateString());
+                                return (!startDate || entryDate === new Date(startDate).toLocaleDateString());
                             });
 
                             const latestEntry = entriesWithinRange[entriesWithinRange.length - 1];
 
-                            if (latestEntry) {
-                                return (
-                                    <tr key={`${index}-${latestEntry._id}`}>
-                                        <td className='border border-gray-300 p-2 text-center text-md'>{new Date(latestEntry.date).toLocaleDateString()}</td>
-                                        <td className='border border-gray-300 p-2 text-center text-md'>{item.itemNumber}</td>
-                                        <td className='border border-gray-300 p-2 text-center text-md'>{item.itemName}</td>
-                                        <td className='border border-gray-300 p-2 text-center text-md'>{latestEntry.stockBalance}</td>
-                                    </tr>
-                                );
-                            }
-
-                            return null;
+                            return (
+                                <tr key={`${index}-${item.itemNumber}`}>
+                                    <td className='border border-gray-300 p-2 text-center text-md'>
+                                        {latestEntry ? new Date(latestEntry.date).toLocaleDateString() : ' '}
+                                    </td>
+                                    <td className='border border-gray-300 p-2 text-center text-md'>{item.itemNumber}</td>
+                                    <td className='border border-gray-300 p-2 text-center text-md'>{item.itemName}</td>
+                                    <td className='border border-gray-300 p-2 text-center text-md'>
+                                        {latestEntry ? latestEntry.stockBalance : '-'}
+                                    </td>
+                                </tr>
+                            );
                         })}
                     </tbody>
                 </table>
