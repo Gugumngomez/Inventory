@@ -26,23 +26,51 @@ const Inventory = () => {
 
     const [isAddStockOpen, setIsAddStockOpen] = useState(false);
 
-    const openAddStock = () => {
-        const lastEntry = materialData.length > 0 ? materialData[materialData.length - 1] : null;
+    const openAddStock = async () => {
+        try {
+            const response = await axios.get(`http://172.105.135.219:4040/api/rawMaterials/${selectedMaterial}`);
+            const materialEntries = response.data.entry;
 
-        if (lastEntry) {
-            setFormData((prevFormData) => ({
-                ...prevFormData,
-                inStock: lastEntry.stockBalance,
-            }));
-        } else {
-            // If there are no entries, set inStock to 0 or any default value
-            setFormData((prevFormData) => ({
-                ...prevFormData,
-                inStock: 0,
-            }));
+            const todayEntry = materialEntries.find(entry => {
+                const entryDate = new Date(entry.date).toDateString();
+                const todayDate = new Date().toDateString();
+                return entryDate === todayDate;
+            });
+
+            if (todayEntry) {
+                // Entry for today already exists, open the edit form
+                setIsEditOpen(true);
+                setEditEntryId(todayEntry._id);
+
+                setFormData((prevFormData) => ({
+                    ...prevFormData,
+                    date: parseISO(todayEntry.date),
+                    inStock: todayEntry.inStock,
+                    stockReceived: todayEntry.stockReceived,
+                    stockUsed: todayEntry.stockUsed,
+                }));
+
+            } else {
+                // Entry for today doesn't exist, open the add stock form
+                const lastEntry = materialEntries.length > 0 ? materialEntries[materialEntries.length - 1] : null;
+
+                if (lastEntry) {
+                    setFormData((prevFormData) => ({
+                        ...prevFormData,
+                        inStock: lastEntry.stockBalance,
+                    }));
+                } else {
+                    setFormData((prevFormData) => ({
+                        ...prevFormData,
+                        inStock: 0,
+                    }));
+                }
+
+                setIsAddStockOpen(true);
+            }
+        } catch (error) {
+            console.error(error);
         }
-
-        setIsAddStockOpen(true);
     };
 
     const closeAddStock = () => {
@@ -60,6 +88,7 @@ const Inventory = () => {
         // Fetch data for the selected raw material
         handleMaterialChange(selectedMaterial);
     }, [selectedMaterial]);
+
 
     const handleMaterialChange = async (materialId) => {
         // Fetch data for the selected raw material
@@ -99,6 +128,7 @@ const Inventory = () => {
         }
     };
 
+    // stock calculations
     const calculateStockBalance = () => {
         return (
             parseInt(formData.inStock === 0 ? latestStockBalance : formData.inStock) +
@@ -107,14 +137,22 @@ const Inventory = () => {
         );
     }
 
+    const calculateEditedStockBalance = (entry) => {
+        return (
+            parseInt(entry.inStock) +
+            parseInt(entry.stockReceived) -
+            parseInt(entry.stockUsed)
+        );
+    }
+    // viewing the rest of the materials
     const handleViewAllToggle = () => {
         setViewAll(!viewAll);
         setDisplayedMaterials(viewAll ? 10 : rawMaterials.length);
     };
 
+    // editing the raw material data
     const handleMaterialClick = (materialId) => {
         setSelectedMaterial(materialId);
-        // Additional logic you might want to perform when a material is selected
     };
     const openEditForm = (entryId) => {
         const entryToEdit = materialData.find((entry) => entry._id === entryId);
@@ -150,7 +188,7 @@ const Inventory = () => {
             // If the user cancels the deletion, exit the function
             return;
         }
-        
+
         try {
             await axios.delete(`http://172.105.135.219:4040/api/rawMaterials/${selectedMaterial}/entry/${entryId}/delete`);
             // Refresh data after deletion
@@ -176,8 +214,24 @@ const Inventory = () => {
 
         try {
             await axios.put(`http://172.105.135.219:4040/api/rawMaterials/${selectedMaterial}/entry/${editEntryId}/edit`, editedData);
-            // Refresh data after editing
-            handleMaterialChange(selectedMaterial);
+
+            // Fetching entries for the selected material from the database
+            const response = await axios.get(`http://172.105.135.219:4040/api/rawMaterials/${selectedMaterial}`);
+            const materialEntries = response.data.entry;
+
+            // Find the index of the edited entry
+            const editedEntryIndex = materialEntries.findIndex(entry => entry._id === editEntryId);
+
+            // Update in-stock values and recalculate stock balances for subsequent entries
+            for (let i = editedEntryIndex + 1; i < materialEntries.length; i++) {
+                materialEntries[i].inStock = materialEntries[i - 1].stockBalance;
+                materialEntries[i].stockBalance = calculateEditedStockBalance(materialEntries[i]);
+
+                // Update the entry in the database
+                await axios.put(`http://172.105.135.219:4040/api/rawMaterials/${selectedMaterial}/entry/${materialEntries[i]._id}/edit`, materialEntries[i]);
+            }
+
+            setMaterialData(materialEntries);
 
             // Clear input fields and close edit form
             closeEditForm();
@@ -202,7 +256,9 @@ const Inventory = () => {
         };
 
         try {
+            // Submit new entry
             await axios.post(`http://172.105.135.219:4040/api/rawMaterials/${selectedMaterial}/entry`, inputData);
+
             // Refresh data after submitting
             handleMaterialChange(selectedMaterial);
 
@@ -214,12 +270,14 @@ const Inventory = () => {
                 stockUsed: 0,
             });
 
+            // Close add stock form
             closeAddStock();
-
         } catch (error) {
             console.error(error);
         }
     };
+
+
 
     return (
         <div className='flex'>
@@ -246,10 +304,10 @@ const Inventory = () => {
                 </div>
             </div>
 
-            <div className='m-3 p-3 w-full'>
+            <div className='m-3 p-3 w-full h-3/6 overflow-auto'>
                 <h1 className='mb-4 pb-2 text-5xl text-center font-bold'>Inventory Management</h1>
 
-                <div >
+                <div>
                     {selectedMaterial && (
                         <div className='mt-4'>
                             {/* <h3>Data for {selectedMaterial}</h3> */}
