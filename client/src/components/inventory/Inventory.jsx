@@ -49,51 +49,23 @@ const Inventory = () => {
         setAdditionalStockUsed(0);
     }
 
-    const openAddStock = async () => {
-        try {
-            const response = await axios.get(`http://172.105.135.219:4040/api/rawMaterials/${selectedMaterial}`);
-            const materialEntries = response.data.entry;
+    const openAddStock = () => {
+        const lastEntry = materialData.length > 0 ? materialData[materialData.length - 1] : null;
 
-            const todayEntry = materialEntries.find(entry => {
-                const entryDate = new Date(entry.date).toDateString();
-                const todayDate = new Date().toDateString();
-                return entryDate === todayDate;
-            });
-
-            if (todayEntry) {
-                // Entry for today already exists, open the edit form
-                setIsEditOpen(true);
-                setEditEntryId(todayEntry._id);
-
-                setFormData((prevFormData) => ({
-                    ...prevFormData,
-                    date: parseISO(todayEntry.date),
-                    inStock: todayEntry.inStock,
-                    stockReceived: todayEntry.stockReceived,
-                    stockUsed: todayEntry.stockUsed,
-                }));
-
-            } else {
-                // Entry for today doesn't exist, open the add stock form
-                const lastEntry = materialEntries.length > 0 ? materialEntries[materialEntries.length - 1] : null;
-
-                if (lastEntry) {
-                    setFormData((prevFormData) => ({
-                        ...prevFormData,
-                        inStock: lastEntry.stockBalance,
-                    }));
-                } else {
-                    setFormData((prevFormData) => ({
-                        ...prevFormData,
-                        inStock: 0,
-                    }));
-                }
-
-                setIsAddStockOpen(true);
-            }
-        } catch (error) {
-            console.error(error);
+        if (lastEntry) {
+            setFormData((prevFormData) => ({
+                ...prevFormData,
+                inStock: lastEntry.stockBalance,
+            }));
+        } else {
+            // If there are no entries, set inStock to 0 or any default value
+            setFormData((prevFormData) => ({
+                ...prevFormData,
+                inStock: 0,
+            }));
         }
+
+        setIsAddStockOpen(true);
     };
 
     const closeAddStock = () => {
