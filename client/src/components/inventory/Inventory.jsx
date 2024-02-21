@@ -26,6 +26,29 @@ const Inventory = () => {
 
     const [isAddStockOpen, setIsAddStockOpen] = useState(false);
 
+    const [showAdditionalInputReceived, setShowAdditionalInputReceived] = useState(false);
+    const [additionalStockReceived, setAdditionalStockReceived] = useState(0);
+    const [showAdditionalInputUsed, setShowAdditionalInputUsed] = useState(false);
+    const [additionalStockUsed, setAdditionalStockUsed] = useState(0);
+
+    const handleStockReceivedAddButtonClick = () => {
+        setFormData((prevFormData) => ({
+            ...prevFormData,
+            stockReceived: parseInt(prevFormData.stockReceived) + parseInt(additionalStockReceived),
+        }));
+        setShowAdditionalInputReceived(false);
+        setAdditionalStockReceived(0);
+    }
+
+    const handleStockUsedAddButtonClick = () => {
+        setFormData((prevFormData) => ({
+            ...prevFormData,
+            stockUsed: parseInt(prevFormData.stockUsed) + parseInt(additionalStockUsed),
+        }));
+        setShowAdditionalInputUsed(false);
+        setAdditionalStockUsed(0);
+    }
+
     const openAddStock = async () => {
         try {
             const response = await axios.get(`http://172.105.135.219:4040/api/rawMaterials/${selectedMaterial}`);
@@ -399,7 +422,43 @@ const Inventory = () => {
                                         <span className='absolute left-2 top-[-8px] px-1 text-lg uppercase tracking-wide peer-focus:text-indigo-500 pointer-events-none duration-200 peer-focus:text-sm bg-white ml-2 peer-valid:text-sm'>
                                             Stock Received:
                                         </span>
+
+                                        {!showAdditionalInputReceived && (
+                                            <button
+                                                onClick={() => setShowAdditionalInputReceived(true)}
+                                                className='text-lg ml-2'
+                                            >
+                                                <i class="fa-solid fa-plus"></i>
+                                            </button>
+                                        )}
                                     </label>
+
+                                    {showAdditionalInputReceived && (
+                                        <div>
+                                            <label className="block m-8 relative">
+                                                <span className='absolute left-2 top-[-8px] px-1 text-sm uppercase tracking-wide peer-focus:text-indigo-500 pointer-events-none duration-200 peer-focus:text-sm bg-white ml-2 peer-valid:text-sm'>
+                                                    Additional Stock Received:
+                                                </span>
+
+                                                <input
+                                                    type="number"
+                                                    value={additionalStockReceived}
+                                                    onChange={(e) => setAdditionalStockReceived(e.target.value)}
+                                                    className='px-4 py-2 text-lg outline-none border-2 border-gray-400 
+                                                    rounded hover:border-gray-600 duration-200 peer focus:border-indigo-600 bg-inherit'
+                                                />
+                                                <button
+                                                    onClick={handleStockReceivedAddButtonClick}
+                                                    className='ml-2 bg-gray-500 p-2 rounded-full'
+                                                >
+                                                    Add
+                                                </button>
+                                            </label>
+
+                                        </div>
+                                    )}
+
+
 
 
                                     <label className="block m-8 relative">
@@ -413,7 +472,40 @@ const Inventory = () => {
                                         <span className='absolute left-2 top-[-8px] px-1 text-lg uppercase tracking-wide peer-focus:text-indigo-500 pointer-events-none duration-200 peer-focus:text-sm bg-white ml-2 peer-valid:text-sm'>
                                             Stock Used:
                                         </span>
+                                        {!showAdditionalInputUsed && (
+                                            <button
+                                                onClick={() => setShowAdditionalInputUsed(true)}
+                                                className='text-lg ml-2'
+                                            >
+                                                <i class="fa-solid fa-plus"></i>
+                                            </button>
+                                        )}
                                     </label>
+
+                                    {showAdditionalInputUsed && (
+                                        <div>
+                                            <label className="block m-8 relative">
+                                                <span className='absolute left-2 top-[-8px] px-1 text-sm uppercase tracking-wide peer-focus:text-indigo-500 pointer-events-none duration-200 peer-focus:text-sm bg-white ml-2 peer-valid:text-sm'>
+                                                    Additional Stock Used:
+                                                </span>
+
+                                                <input
+                                                    type="number"
+                                                    value={additionalStockUsed}
+                                                    onChange={(e) => setAdditionalStockUsed(e.target.value)}
+                                                    className='px-4 py-2 text-lg outline-none border-2 border-gray-400 
+                                            rounded hover:border-gray-600 duration-200 peer focus:border-indigo-600 bg-inherit'
+                                                />
+                                                <button
+                                                    onClick={handleStockUsedAddButtonClick}
+                                                    className='ml-2 bg-gray-500 p-2 rounded-full'
+                                                >
+                                                    Add
+                                                </button>
+                                            </label>
+
+                                        </div>
+                                    )}
 
                                     <button
                                         type="submit"
