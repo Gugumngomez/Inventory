@@ -11,12 +11,33 @@ const Summary = () => {
     // const [endDate, setEndDate] = useState('');
     const componentRef = useRef();
     const navigate = useNavigate();
+    const [totalStockBalance, setTotalStockBalance] = useState(0);
 
     useEffect(() => {
         axios.get('http://172.105.135.219:4040/api/rawmaterials')
             .then(res => setData(res.data))
             .catch(er => console.error(er));
     }, []);
+
+    useEffect(() => {
+        if (data.length > 0) {
+            const filteredData = data.filter((stock) => {
+                const entriesWithinRange = stock.entry.filter(entry => {
+                    const entryDate = new Date(entry.date).toLocaleDateString();
+                    return (!startDate || entryDate === new Date(startDate).toLocaleDateString());
+                });
+
+                return entriesWithinRange.length > 0;
+            });
+
+            const stockBalanceTotal = filteredData.reduce((total, stock) => {
+                const latestEntry = stock.entry[stock.entry.length - 1];
+                return total + (latestEntry ? latestEntry.stockBalance : 0);
+            }, 0);
+
+            setTotalStockBalance(stockBalanceTotal);
+        }
+    }, [data, startDate]);
 
     return (
         <div>
@@ -80,6 +101,12 @@ const Summary = () => {
                             );
                         })}
                     </tbody>
+                    <tfoot>
+                        <td colSpan="3" className='border border-gray-300 p-2 text-right font-bold text-lg'>Total:</td>
+                        <td className='border border-gray-300 p-2 text-center text-md font-bold'>
+                            {totalStockBalance}
+                        </td>
+                    </tfoot>
                 </table>
             </div>
             <button

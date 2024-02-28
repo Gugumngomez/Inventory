@@ -275,7 +275,7 @@ const Inventory = () => {
 
 
     return (
-        <div className='flex'>
+        <div className='flex relative'>
             <div className='w-72 h-screen bg-gray-500 overflow-hidden text-white'>
                 <div className='overflow-y-auto h-full'>
                     <h1 className='mt-3 pl-2 text-2xl'>Raw Materials:</h1>
@@ -306,256 +306,255 @@ const Inventory = () => {
                     {selectedMaterial && (
                         <div className='mt-4'>
                             {/* <h3>Data for {selectedMaterial}</h3> */}
-                            <table className='min-w-full border border-gray-300'>
-                                <thead>
-                                    <tr>
-                                        <th className='border border-gray-300 p-2 text-xl'>Date</th>
-                                        <th className='border border-gray-300 p-2 text-xl'>In Stock</th>
-                                        <th className='border border-gray-300 p-2 text-xl'>Stock Received</th>
-                                        <th className='border border-gray-300 p-2 text-xl'>Stock Used</th>
-                                        <th className='border border-gray-300 p-2 text-xl'>Stock Balance</th>
-                                        <th className='border border-gray-300 p-2 text-xl'>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {materialData?.map(entry => (
-                                        <tr key={entry._id}>
-                                            <td className='border border-gray-300 p-2 text-center text-lg'>{format(parseISO(entry.date), 'yyyy-MM-dd')}</td>
-                                            <td className='border border-gray-300 p-2 text-center text-lg'>{entry.inStock}</td>
-                                            <td className='border border-gray-300 p-2 text-center text-lg'>{entry.stockReceived}</td>
-                                            <td className='border border-gray-300 p-2 text-center text-lg'>{entry.stockUsed}</td>
-                                            <td className='border border-gray-300 p-2 text-center text-lg'>{entry.stockBalance}</td>
-                                            <td className='border border-gray-300 p-2 text-center text-lg'>
-                                                <button onClick={() => openEditForm(entry._id)} className='text-indigo-500 hover:underline text-xl mr-5'>
-                                                    <i class="fa-regular fa-pen-to-square"></i>
-                                                </button>
-                                                <button onClick={() => handleDelete(entry._id)} className='text-red-500 hover:underline text-xl'>
-                                                    <i class="fa-solid fa-trash"></i>
-                                                </button>
-                                            </td>
-
+                            <div className='table-container max-h-[calc(100vh-150px)] overflow-auto'>
+                                <table className='min-w-full border border-gray-300'>
+                                    <thead>
+                                        <tr>
+                                            <th className='border border-gray-300 p-2 text-xl'>Date</th>
+                                            <th className='border border-gray-300 p-2 text-xl'>In Stock</th>
+                                            <th className='border border-gray-300 p-2 text-xl'>Stock Received</th>
+                                            <th className='border border-gray-300 p-2 text-xl'>Stock Used</th>
+                                            <th className='border border-gray-300 p-2 text-xl'>Stock Balance</th>
+                                            <th className='border border-gray-300 p-2 text-xl'>Actions</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                            <button onClick={isEditOpen ? closeEditForm : openAddStock} className={`mt-3 border p-1 rounded-md border-gray-300 ${isEditOpen ? 'hidden' : ''}`}>
-                                {isEditOpen ? 'Cancel Edit' : 'Add Stock'}
-                            </button>
-                        </div>
+                                    </thead>
+                                    <tbody>
+                                        {materialData?.map(entry => (
+                                            <tr key={entry._id}>
+                                                <td className='border border-gray-300 p-2 text-center text-lg'>{format(parseISO(entry.date), 'yyyy-MM-dd')}</td>
+                                                <td className='border border-gray-300 p-2 text-center text-lg'>{entry.inStock}</td>
+                                                <td className='border border-gray-300 p-2 text-center text-lg'>{entry.stockReceived}</td>
+                                                <td className='border border-gray-300 p-2 text-center text-lg'>{entry.stockUsed}</td>
+                                                <td className='border border-gray-300 p-2 text-center text-lg'>{entry.stockBalance}</td>
+                                                <td className='border border-gray-300 p-2 text-center text-lg'>
+                                                    <button onClick={() => openEditForm(entry._id)} className='text-indigo-500 hover:underline text-xl mr-5'>
+                                                        <i class="fa-regular fa-pen-to-square"></i>
+                                                    </button>
+                                                    <button onClick={() => handleDelete(entry._id)} className='text-red-500 hover:underline text-xl'>
+                                                        <i class="fa-solid fa-trash"></i>
+                                                    </button>
+                                                </td>
 
-                    )}
-                    {isAddStockOpen && (
-                        <div className=''>
-                            <div className='flex items-center justify-center'>
-                                <form onSubmit={handleSubmit}
-                                    className='mt-3 p-2 rounded-tl-lg shadow-2xl'
-                                >
-                                    <button
-                                        onClick={closeAddStock}
-                                        className='m-2 text-2xl'
-                                    >
-                                        <i class="fa-solid fa-xmark"></i>
-                                    </button>
-                                    <label className="block m-8 relative">
-                                        <DatePicker
-                                            selected={formData.date}
-                                            onChange={(date) => setFormData({ ...formData, date })}
-                                            className='px-4 py-2 text-lg outline-none border-2 border-gray-400 
-                                            rounded hover:border-gray-600 duration-200 peer focus:border-indigo-600 bg-inherit'
-                                        />
-                                        <span className='absolute left-2 top-[-8px] px-1 text-sm uppercase tracking-wide peer-focus:text-indigo-500 pointer-events-none duration-200 peer-focus:text-sm bg-white ml-2 peer-valid:text-sm'>
-                                            Date:
-                                        </span>
-                                    </label>
-
-
-                                    <label className="block m-8 relative">
-                                        <input
-                                            type="number"
-                                            value={formData.inStock === 0 ? '' : formData.inStock}
-                                            onChange={(e) => setFormData({ ...formData, inStock: e.target.value })}
-                                            className='px-4 py-2 text-lg outline-none border-2 border-gray-400 
-                                            rounded hover:border-gray-600 duration-200 peer focus:border-indigo-600 bg-inherit'
-                                        />
-                                        <span className='absolute left-2 top-[-8px] px-1 text-lg uppercase tracking-wide peer-focus:text-indigo-500 pointer-events-none duration-200 peer-focus:text-sm bg-white ml-2 peer-valid:text-sm'>
-                                            In Stock:
-                                        </span>
-                                    </label>
-
-
-                                    <label className="block m-8 relative">
-                                        <input
-                                            type="number"
-                                            value={formData.stockReceived}
-                                            onChange={(e) => setFormData({ ...formData, stockReceived: e.target.value })}
-                                            className='px-4 py-2 text-lg outline-none border-2 border-gray-400 
-                                            rounded hover:border-gray-600 duration-200 peer focus:border-indigo-600 bg-inherit'
-                                        />
-                                        <span className='absolute left-2 top-[-8px] px-1 text-lg uppercase tracking-wide peer-focus:text-indigo-500 pointer-events-none duration-200 peer-focus:text-sm bg-white ml-2 peer-valid:text-sm'>
-                                            Stock Received:
-                                        </span>
-
-                                        {!showAdditionalInputReceived && (
-                                            <button
-                                                onClick={() => setShowAdditionalInputReceived(true)}
-                                                className='text-lg ml-2'
-                                            >
-                                                <i class="fa-solid fa-plus"></i>
-                                            </button>
-                                        )}
-                                    </label>
-
-                                    {showAdditionalInputReceived && (
-                                        <div>
-                                            <label className="block m-8 relative">
-                                                <span className='absolute left-2 top-[-8px] px-1 text-sm uppercase tracking-wide peer-focus:text-indigo-500 pointer-events-none duration-200 peer-focus:text-sm bg-white ml-2 peer-valid:text-sm'>
-                                                    Additional Stock Received:
-                                                </span>
-
-                                                <input
-                                                    type="number"
-                                                    value={additionalStockReceived}
-                                                    onChange={(e) => setAdditionalStockReceived(e.target.value)}
-                                                    className='px-4 py-2 text-lg outline-none border-2 border-gray-400 
-                                                    rounded hover:border-gray-600 duration-200 peer focus:border-indigo-600 bg-inherit'
-                                                />
-                                                <button
-                                                    onClick={handleStockReceivedAddButtonClick}
-                                                    className='ml-2 bg-gray-500 p-2 rounded-full'
-                                                >
-                                                    Add
-                                                </button>
-                                            </label>
-
-                                        </div>
-                                    )}
-
-
-
-
-                                    <label className="block m-8 relative">
-                                        <input
-                                            type="number"
-                                            value={formData.stockUsed}
-                                            onChange={(e) => setFormData({ ...formData, stockUsed: e.target.value })}
-                                            className='px-4 py-2 text-lg outline-none border-2 border-gray-400 
-                                            rounded hover:border-gray-600 duration-200 peer focus:border-indigo-600 bg-inherit'
-                                        />
-                                        <span className='absolute left-2 top-[-8px] px-1 text-lg uppercase tracking-wide peer-focus:text-indigo-500 pointer-events-none duration-200 peer-focus:text-sm bg-white ml-2 peer-valid:text-sm'>
-                                            Stock Used:
-                                        </span>
-                                        {!showAdditionalInputUsed && (
-                                            <button
-                                                onClick={() => setShowAdditionalInputUsed(true)}
-                                                className='text-lg ml-2'
-                                            >
-                                                <i class="fa-solid fa-plus"></i>
-                                            </button>
-                                        )}
-                                    </label>
-
-                                    {showAdditionalInputUsed && (
-                                        <div>
-                                            <label className="block m-8 relative">
-                                                <span className='absolute left-2 top-[-8px] px-1 text-sm uppercase tracking-wide peer-focus:text-indigo-500 pointer-events-none duration-200 peer-focus:text-sm bg-white ml-2 peer-valid:text-sm'>
-                                                    Additional Stock Used:
-                                                </span>
-
-                                                <input
-                                                    type="number"
-                                                    value={additionalStockUsed}
-                                                    onChange={(e) => setAdditionalStockUsed(e.target.value)}
-                                                    className='px-4 py-2 text-lg outline-none border-2 border-gray-400 
-                                            rounded hover:border-gray-600 duration-200 peer focus:border-indigo-600 bg-inherit'
-                                                />
-                                                <button
-                                                    onClick={handleStockUsedAddButtonClick}
-                                                    className='ml-2 bg-gray-500 p-2 rounded-full'
-                                                >
-                                                    Add
-                                                </button>
-                                            </label>
-
-                                        </div>
-                                    )}
-
-                                    <button
-                                        type="submit"
-                                        className=' bg-gray-500 p-2 m-2 rounded-full'
-                                    >
-                                        Submit Data
-                                    </button>
-                                </form>
-
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                                <button onClick={isEditOpen ? closeEditForm : openAddStock} className={`mt-3 border p-1 rounded-md border-gray-300 ${isEditOpen ? 'hidden' : ''}`}>
+                                    {isEditOpen ? 'Cancel Edit' : 'Add Stock'}
+                                </button>
                             </div>
+                        </div>
+                    )}
+
+                    {isAddStockOpen && (
+                        <div className='absolute top-0 left-0 w-full h-full bg-gray-800 bg-opacity-75 flex items-center justify-center'>
+                            <form onSubmit={handleSubmit}
+                                className='p-4 bg-white rounded-lg shadow-2xl'
+                            >
+                                <button
+                                    onClick={closeAddStock}
+                                    className='m-2 text-2xl'
+                                >
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                                <label className="block m-8 relative">
+                                    <DatePicker
+                                        selected={formData.date}
+                                        onChange={(date) => setFormData({ ...formData, date })}
+                                        className='px-4 py-2 text-lg outline-none border-2 border-gray-400 
+                                            rounded hover:border-gray-600 duration-200 peer focus:border-indigo-600 bg-inherit'
+                                    />
+                                    <span className='absolute left-2 top-[-8px] px-1 text-sm uppercase tracking-wide peer-focus:text-indigo-500 pointer-events-none duration-200 peer-focus:text-sm bg-white ml-2 peer-valid:text-sm'>
+                                        Date:
+                                    </span>
+                                </label>
+
+
+                                <label className="block m-8 relative">
+                                    <input
+                                        type="number"
+                                        value={formData.inStock === 0 ? '' : formData.inStock}
+                                        onChange={(e) => setFormData({ ...formData, inStock: e.target.value })}
+                                        className='px-4 py-2 text-lg outline-none border-2 border-gray-400 
+                                            rounded hover:border-gray-600 duration-200 peer focus:border-indigo-600 bg-inherit'
+                                    />
+                                    <span className='absolute left-2 top-[-8px] px-1 text-lg uppercase tracking-wide peer-focus:text-indigo-500 pointer-events-none duration-200 peer-focus:text-sm bg-white ml-2 peer-valid:text-sm'>
+                                        In Stock:
+                                    </span>
+                                </label>
+
+
+                                <label className="block m-8 relative">
+                                    <input
+                                        type="number"
+                                        value={formData.stockReceived}
+                                        onChange={(e) => setFormData({ ...formData, stockReceived: e.target.value })}
+                                        className='px-4 py-2 text-lg outline-none border-2 border-gray-400 
+                                            rounded hover:border-gray-600 duration-200 peer focus:border-indigo-600 bg-inherit'
+                                    />
+                                    <span className='absolute left-2 top-[-8px] px-1 text-lg uppercase tracking-wide peer-focus:text-indigo-500 pointer-events-none duration-200 peer-focus:text-sm bg-white ml-2 peer-valid:text-sm'>
+                                        Stock Received:
+                                    </span>
+
+                                    {!showAdditionalInputReceived && (
+                                        <button
+                                            onClick={() => setShowAdditionalInputReceived(true)}
+                                            className='text-lg ml-2'
+                                        >
+                                            <i class="fa-solid fa-plus"></i>
+                                        </button>
+                                    )}
+                                </label>
+
+                                {showAdditionalInputReceived && (
+                                    <div>
+                                        <label className="block m-8 relative">
+                                            <span className='absolute left-2 top-[-8px] px-1 text-sm uppercase tracking-wide peer-focus:text-indigo-500 pointer-events-none duration-200 peer-focus:text-sm bg-white ml-2 peer-valid:text-sm'>
+                                                Additional Stock Received:
+                                            </span>
+
+                                            <input
+                                                type="number"
+                                                value={additionalStockReceived}
+                                                onChange={(e) => setAdditionalStockReceived(e.target.value)}
+                                                className='px-4 py-2 text-lg outline-none border-2 border-gray-400 
+                                                    rounded hover:border-gray-600 duration-200 peer focus:border-indigo-600 bg-inherit'
+                                            />
+                                            <button
+                                                onClick={handleStockReceivedAddButtonClick}
+                                                className='ml-2 bg-gray-500 p-2 rounded-full'
+                                            >
+                                                Add
+                                            </button>
+                                        </label>
+
+                                    </div>
+                                )}
+
+
+
+
+                                <label className="block m-8 relative">
+                                    <input
+                                        type="number"
+                                        value={formData.stockUsed}
+                                        onChange={(e) => setFormData({ ...formData, stockUsed: e.target.value })}
+                                        className='px-4 py-2 text-lg outline-none border-2 border-gray-400 
+                                            rounded hover:border-gray-600 duration-200 peer focus:border-indigo-600 bg-inherit'
+                                    />
+                                    <span className='absolute left-2 top-[-8px] px-1 text-lg uppercase tracking-wide peer-focus:text-indigo-500 pointer-events-none duration-200 peer-focus:text-sm bg-white ml-2 peer-valid:text-sm'>
+                                        Stock Used:
+                                    </span>
+                                    {!showAdditionalInputUsed && (
+                                        <button
+                                            onClick={() => setShowAdditionalInputUsed(true)}
+                                            className='text-lg ml-2'
+                                        >
+                                            <i class="fa-solid fa-plus"></i>
+                                        </button>
+                                    )}
+                                </label>
+
+                                {showAdditionalInputUsed && (
+                                    <div>
+                                        <label className="block m-8 relative">
+                                            <span className='absolute left-2 top-[-8px] px-1 text-sm uppercase tracking-wide peer-focus:text-indigo-500 pointer-events-none duration-200 peer-focus:text-sm bg-white ml-2 peer-valid:text-sm'>
+                                                Additional Stock Used:
+                                            </span>
+
+                                            <input
+                                                type="number"
+                                                value={additionalStockUsed}
+                                                onChange={(e) => setAdditionalStockUsed(e.target.value)}
+                                                className='px-4 py-2 text-lg outline-none border-2 border-gray-400 
+                                            rounded hover:border-gray-600 duration-200 peer focus:border-indigo-600 bg-inherit'
+                                            />
+                                            <button
+                                                onClick={handleStockUsedAddButtonClick}
+                                                className='ml-2 bg-gray-500 p-2 rounded-full'
+                                            >
+                                                Add
+                                            </button>
+                                        </label>
+
+                                    </div>
+                                )}
+
+                                <button
+                                    type="submit"
+                                    className=' bg-gray-500 p-2 m-2 rounded-full'
+                                >
+                                    Submit Data
+                                </button>
+                            </form>
+
+
                         </div>
                     )}
                     {isEditOpen && (
-                        <div className=''>
-                            <div className='flex items-center justify-center'>
-                                <form onSubmit={handleEditSubmit} className='mt-3 p-2 rounded-tl-lg shadow-2xl'>
-                                    <button
-                                        onClick={closeEditForm}
-                                        className='m-2 text-2xl'
-                                    >
-                                        <i class="fa-solid fa-xmark"></i>
-                                    </button>
-                                    <label className="block m-8 relative">
-                                        <DatePicker
-                                            selected={formData.date}
-                                            onChange={(date) => setFormData({ ...formData, date })}
-                                            className='px-4 py-2 text-lg outline-none border-2 border-gray-400 
+                        <div className='absolute top-0 left-0 w-full h-full bg-gray-800 bg-opacity-75 flex items-center justify-center'>
+                            <form onSubmit={handleEditSubmit} className='p-4 bg-white rounded-lg shadow-2xl'>
+                                <button
+                                    onClick={closeEditForm}
+                                    className='m-2 text-2xl'
+                                >
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                                <label className="block m-8 relative">
+                                    <DatePicker
+                                        selected={formData.date}
+                                        onChange={(date) => setFormData({ ...formData, date })}
+                                        className='px-4 py-2 text-lg outline-none border-2 border-gray-400 
                         rounded hover:border-gray-600 duration-200 peer focus:border-indigo-600 bg-inherit'
-                                        />
-                                        <span className='absolute left-2 top-[-8px] px-1 text-sm uppercase tracking-wide peer-focus:text-indigo-500 pointer-events-none duration-200 peer-focus:text-sm bg-white ml-2 peer-valid:text-sm'>
-                                            Date:
-                                        </span>
-                                    </label>
+                                    />
+                                    <span className='absolute left-2 top-[-8px] px-1 text-sm uppercase tracking-wide peer-focus:text-indigo-500 pointer-events-none duration-200 peer-focus:text-sm bg-white ml-2 peer-valid:text-sm'>
+                                        Date:
+                                    </span>
+                                </label>
 
-                                    <label className="block m-8 relative">
-                                        <input
-                                            type="number"
-                                            value={formData.inStock}
-                                            onChange={(e) => setFormData({ ...formData, inStock: e.target.value })}
-                                            className='px-4 py-2 text-lg outline-none border-2 border-gray-400 
+                                <label className="block m-8 relative">
+                                    <input
+                                        type="number"
+                                        value={formData.inStock}
+                                        onChange={(e) => setFormData({ ...formData, inStock: e.target.value })}
+                                        className='px-4 py-2 text-lg outline-none border-2 border-gray-400 
                         rounded hover:border-gray-600 duration-200 peer focus:border-indigo-600 bg-inherit'
-                                        />
-                                        <span className='absolute left-2 top-[-8px] px-1 text-lg uppercase tracking-wide peer-focus:text-indigo-500 pointer-events-none duration-200 peer-focus:text-sm bg-white ml-2 peer-valid:text-sm'>
-                                            In Stock:
-                                        </span>
-                                    </label>
+                                    />
+                                    <span className='absolute left-2 top-[-8px] px-1 text-lg uppercase tracking-wide peer-focus:text-indigo-500 pointer-events-none duration-200 peer-focus:text-sm bg-white ml-2 peer-valid:text-sm'>
+                                        In Stock:
+                                    </span>
+                                </label>
 
-                                    <label className="block m-8 relative">
-                                        <input
-                                            type="number"
-                                            value={formData.stockReceived}
-                                            onChange={(e) => setFormData({ ...formData, stockReceived: e.target.value })}
-                                            className='px-4 py-2 text-lg outline-none border-2 border-gray-400 
+                                <label className="block m-8 relative">
+                                    <input
+                                        type="number"
+                                        value={formData.stockReceived}
+                                        onChange={(e) => setFormData({ ...formData, stockReceived: e.target.value })}
+                                        className='px-4 py-2 text-lg outline-none border-2 border-gray-400 
                         rounded hover:border-gray-600 duration-200 peer focus:border-indigo-600 bg-inherit'
-                                        />
-                                        <span className='absolute left-2 top-[-8px] px-1 text-lg uppercase tracking-wide peer-focus:text-indigo-500 pointer-events-none duration-200 peer-focus:text-sm bg-white ml-2 peer-valid:text-sm'>
-                                            Stock Received:
-                                        </span>
-                                    </label>
+                                    />
+                                    <span className='absolute left-2 top-[-8px] px-1 text-lg uppercase tracking-wide peer-focus:text-indigo-500 pointer-events-none duration-200 peer-focus:text-sm bg-white ml-2 peer-valid:text-sm'>
+                                        Stock Received:
+                                    </span>
+                                </label>
 
-                                    <label className="block m-8 relative">
-                                        <input
-                                            type="number"
-                                            value={formData.stockUsed}
-                                            onChange={(e) => setFormData({ ...formData, stockUsed: e.target.value })}
-                                            className='px-4 py-2 text-lg outline-none border-2 border-gray-400 
+                                <label className="block m-8 relative">
+                                    <input
+                                        type="number"
+                                        value={formData.stockUsed}
+                                        onChange={(e) => setFormData({ ...formData, stockUsed: e.target.value })}
+                                        className='px-4 py-2 text-lg outline-none border-2 border-gray-400 
                         rounded hover:border-gray-600 duration-200 peer focus:border-indigo-600 bg-inherit'
-                                        />
-                                        <span className='absolute left-2 top-[-8px] px-1 text-lg uppercase tracking-wide peer-focus:text-indigo-500 pointer-events-none duration-200 peer-focus:text-sm bg-white ml-2 peer-valid:text-sm'>
-                                            Stock Used:
-                                        </span>
-                                    </label>
+                                    />
+                                    <span className='absolute left-2 top-[-8px] px-1 text-lg uppercase tracking-wide peer-focus:text-indigo-500 pointer-events-none duration-200 peer-focus:text-sm bg-white ml-2 peer-valid:text-sm'>
+                                        Stock Used:
+                                    </span>
+                                </label>
 
-                                    <button type="submit" className='bg-gray-500 p-2 m-2 rounded-full'>
-                                        Save Changes
-                                    </button>
-                                </form>
-                            </div>
+                                <button type="submit" className='bg-gray-500 p-2 m-2 rounded-full'>
+                                    Save Changes
+                                </button>
+                            </form>
                         </div>
                     )}
                 </div>
