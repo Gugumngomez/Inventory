@@ -13,19 +13,93 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // connect to MongoDB
-mongoose.connect("mongodb+srv://gugulethu:Superman1!@atlascluster.kvdittq.mongodb.net/inventory", {
+mongoose.connect("mongodb+srv://gugulethu:Superman1!@atlascluster.kvdittq.mongodb.net/Inventory1", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
 });
 
+// const rawMaterials = [
+//     {
+//         "id": 1,
+//         "itemNumber": "RM - 004 SCRAP EXT",
+//         "itemName": "004 SCRAP EXT",
+//         "materialType": "Copper",
+//         "entry": []
+//     },
+//     {
+//         "id": 2,
+//         "itemNumber": "RM - 004 SCRAP EXT",
+//         "itemName": "004 SCRAP EXT",
+//         "materialType": "Brass",
+//         "entry": []
+//     },
+//     {
+//         "id": 3,
+//         "itemNumber": "RM - 008 SCRAP",
+//         "itemName": "004 SCRAP",
+//         "materialType": "Copper",
+//         "entry": []
+//     },
+//     {
+//         "id": 4,
+//         "itemNumber": "RM - 010 SCRAP EXT",
+//         "itemName": "010 SCRAP EXT",
+//         "materialType": "Copper",
+//         "entry": []
+//     },
+//     {
+//         "id": 5,
+//         "itemNumber": "RM - 010 SCRAP EXT",
+//         "itemName": "010 SCRAP EXT",
+//         "materialType": "Brass",
+//         "entry": []
+//     },
+//     {
+//         "id": 6,
+//         "itemNumber": "RM - 100 SCRAP",
+//         "itemName": "100 SERIES SCRAP",
+//         "materialType": "Copper",
+//         "entry": [
+
+//         ]
+//     }
+// ];
+
+// RawMaterial.insertMany(rawMaterials)
+//     .then(() => {
+//         console.log('Raw Materials added');
+//         mongoose.connection.close();
+        
+//     })
+//     .catch(err => {
+//         console.error(err);
+//         mongoose.connection.close();
+//     });
+
+// app.get('/api/rawMaterials', async (req, res) => {
+//     try {
+//         const rawMaterials = await RawMaterial.find();
+//         res.status(200).json(rawMaterials);
+//     } catch (error) {
+//         res.status(500).json({ error: error.message });
+//     }
+// });
+
+
+// GET: Retrieve all raw materials, optionally filtered by materialType
 app.get('/api/rawMaterials', async (req, res) => {
+    const { materialType } = req.query; // optional query parameter
+
     try {
-        const rawMaterials = await RawMaterial.find();
+        const filter = materialType ? { materialType } : {};
+        const rawMaterials = await RawMaterial.find(filter);
+
         res.status(200).json(rawMaterials);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
+
 
 
 app.get('/api/rawmaterials/:id', async (req, res) => {
@@ -39,6 +113,26 @@ app.get('/api/rawmaterials/:id', async (req, res) => {
     }
 });
 
+// Add new raw material 
+app.post('/api/rawMaterials', async (req, res) => {
+    const { itemNumber, itemName, materialType } = req.body;
+
+    try {
+        const newMaterial = new RawMaterial({
+            itemNumber,
+            itemName,
+            materialType,
+            entry: []
+        });
+
+        await newMaterial.save();
+        res.status(201).json(newMaterial);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal server error'});
+        
+    }
+});
 
 app.post('/api/rawMaterials/:id/entry', async (req, res) => {
     const materialId = req.params.id;

@@ -14,7 +14,7 @@ const Summary = () => {
     const [totalStockBalance, setTotalStockBalance] = useState(0);
 
     useEffect(() => {
-        axios.get('http://172.105.135.219:4040/api/rawmaterials')
+        axios.get('http://localhost:4040/api/rawmaterials')
             .then(res => setData(res.data))
             .catch(er => console.error(er));
     }, []);
@@ -75,6 +75,7 @@ const Summary = () => {
                             <th className='border border-gray-300 p-2 text-xl'>Date</th>
                             <th className='border border-gray-300 p-2 text-xl'>Item Number</th>
                             <th className='border border-gray-300 p-2 text-xl'>Item Name</th>
+                            <th className='border border-gray-300 p-2 text-xl'>Material Type</th>
                             <th className='border border-gray-300 p-2 text-xl'>Stock Balance</th>
                         </tr>
                     </thead>
@@ -94,6 +95,7 @@ const Summary = () => {
                                     </td>
                                     <td className='border border-gray-300 p-2 text-center text-md'>{item.itemNumber}</td>
                                     <td className='border border-gray-300 p-2 text-center text-md'>{item.itemName}</td>
+                                    <td className='border border-gray-300 p-2 text-center text-md'>{item.materialType}</td>
                                     <td className='border border-gray-300 p-2 text-center text-md'>
                                         {latestEntry ? latestEntry.stockBalance : '-'}
                                     </td>
@@ -102,7 +104,7 @@ const Summary = () => {
                         })}
                     </tbody>
                     <tfoot>
-                        <td colSpan="3" className='border border-gray-300 p-2 text-right font-bold text-lg'>Total:</td>
+                        <td colSpan="4" className='border border-gray-300 p-2 text-right font-bold text-lg'>Total:</td>
                         <td className='border border-gray-300 p-2 text-center text-md font-bold'>
                             {totalStockBalance}
                         </td>

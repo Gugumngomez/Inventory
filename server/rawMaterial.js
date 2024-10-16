@@ -3,6 +3,11 @@ const mongoose = require('mongoose');
 const rawMaterialsSchema = new mongoose.Schema({
     itemNumber: String,
     itemName: String,
+    materialType: {
+        type: String,
+        enum: ['Copper', 'Brass'],
+        required: true
+    },
     entry: [
         {
             date: Date,

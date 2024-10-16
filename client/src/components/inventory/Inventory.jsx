@@ -25,12 +25,14 @@ const Inventory = () => {
     });
 
     const [isAddStockOpen, setIsAddStockOpen] = useState(false);
-
     const [showAdditionalInputReceived, setShowAdditionalInputReceived] = useState(false);
     const [additionalStockReceived, setAdditionalStockReceived] = useState(0);
     const [showAdditionalInputUsed, setShowAdditionalInputUsed] = useState(false);
     const [additionalStockUsed, setAdditionalStockUsed] = useState(0);
+    const [selectedMaterialType, setSelectedMaterialType] = useState('Copper'); // Default to 'Copper'
 
+    // Step 2: Filter raw materials based on the selected material type (Brass or Copper)
+    const filteredMaterials = rawMaterials.filter(material => material.materialType === selectedMaterialType);
     const handleStockReceivedAddButtonClick = () => {
         setFormData((prevFormData) => ({
             ...prevFormData,
@@ -74,7 +76,7 @@ const Inventory = () => {
 
     useEffect(() => {
         // Fetch raw materials from the server
-        axios.get('http://172.105.135.219:4040/api/rawmaterials')
+        axios.get('http://localhost:4040/api/rawmaterials')
             .then(response => setRawMaterials(response.data))
             .catch(error => console.error(error));
     }, []);
@@ -88,7 +90,7 @@ const Inventory = () => {
     const handleMaterialChange = async (materialId) => {
         // Fetch data for the selected raw material
         try {
-            const response = await axios.get(`http://172.105.135.219:4040/api/rawMaterials/${materialId}`);
+            const response = await axios.get(`http://localhost:4040/api/rawMaterials/${materialId}`);
             const materialEntries = response.data.entry;
 
             let yesterdayStockBalance = 0;
@@ -185,7 +187,7 @@ const Inventory = () => {
         }
 
         try {
-            await axios.delete(`http://172.105.135.219:4040/api/rawMaterials/${selectedMaterial}/entry/${entryId}/delete`);
+            await axios.delete(`http://localhost:4040/api/rawMaterials/${selectedMaterial}/entry/${entryId}/delete`);
             // Refresh data after deletion
             handleMaterialChange(selectedMaterial);
         } catch (error) {
@@ -208,10 +210,10 @@ const Inventory = () => {
         };
 
         try {
-            await axios.put(`http://172.105.135.219:4040/api/rawMaterials/${selectedMaterial}/entry/${editEntryId}/edit`, editedData);
+            await axios.put(`http://localhost:4040/api/rawMaterials/${selectedMaterial}/entry/${editEntryId}/edit`, editedData);
 
             // Fetching entries for the selected material from the database
-            const response = await axios.get(`http://172.105.135.219:4040/api/rawMaterials/${selectedMaterial}`);
+            const response = await axios.get(`http://localhost:4040/api/rawMaterials/${selectedMaterial}`);
             const materialEntries = response.data.entry;
 
             // Find the index of the edited entry
@@ -223,7 +225,7 @@ const Inventory = () => {
                 materialEntries[i].stockBalance = calculateEditedStockBalance(materialEntries[i]);
 
                 // Update the entry in the database
-                await axios.put(`http://172.105.135.219:4040/api/rawMaterials/${selectedMaterial}/entry/${materialEntries[i]._id}/edit`, materialEntries[i]);
+                await axios.put(`http://localhost:4040/api/rawMaterials/${selectedMaterial}/entry/${materialEntries[i]._id}/edit`, materialEntries[i]);
             }
 
             setMaterialData(materialEntries);
@@ -252,7 +254,7 @@ const Inventory = () => {
 
         try {
             // Submit new entry
-            await axios.post(`http://172.105.135.219:4040/api/rawMaterials/${selectedMaterial}/entry`, inputData);
+            await axios.post(`http://localhost:4040/api/rawMaterials/${selectedMaterial}/entry`, inputData);
 
             // Refresh data after submitting
             handleMaterialChange(selectedMaterial);
@@ -279,8 +281,24 @@ const Inventory = () => {
             <div className='w-72 h-screen bg-gray-500 overflow-hidden text-white'>
                 <div className='overflow-y-auto h-full'>
                     <h1 className='mt-3 pl-2 text-2xl'>Raw Materials:</h1>
-                    <ol className='pl-2 mt-4'>
-                        {rawMaterials.slice(0, displayedMaterials).map(material => (
+                    <div className='flex justify-center mt-5'>
+                        <button
+                            onClick={() => setSelectedMaterialType('Copper')}
+                            className={`px-2 text-lg mx-2 ${selectedMaterialType === 'Copper' ? 'bg-slate-700' : ''} text-white rounded-sm`}
+                        >
+                            Copper
+                        </button>
+                        <button
+                            onClick={() => setSelectedMaterialType('Brass')}
+                            className={`px-2 text-xl mx-2 ${selectedMaterialType === 'Brass' ? 'bg-slate-700' : ''} text-white rounded-sm`}
+                        >
+                            Brass
+                        </button>
+                    </div>
+
+                    {/* Step 4: Display filtered raw materials based on selected material type */}
+                    <ol className='pl-2 mt-6'>
+                        {filteredMaterials.map(material => (
                             <li
                                 key={material._id}
                                 onClick={() => handleMaterialClick(material._id)}
@@ -433,7 +451,6 @@ const Inventory = () => {
 
 
 
-
                                 <label className="block m-8 relative">
                                     <input
                                         type="number"
@@ -491,6 +508,8 @@ const Inventory = () => {
 
                         </div>
                     )}
+
+                    {/* This is the edit form where you edit the entry. editing the entry affects the rest of the code */}
                     {isEditOpen && (
                         <div className='absolute top-0 left-0 w-full h-full bg-gray-800 bg-opacity-75 flex items-center justify-center'>
                             <form onSubmit={handleEditSubmit} className='p-4 bg-white rounded-lg shadow-2xl'>
