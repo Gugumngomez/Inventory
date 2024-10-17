@@ -29,7 +29,7 @@ const Inventory = () => {
     const [additionalStockReceived, setAdditionalStockReceived] = useState(0);
     const [showAdditionalInputUsed, setShowAdditionalInputUsed] = useState(false);
     const [additionalStockUsed, setAdditionalStockUsed] = useState(0);
-    const [selectedMaterialType, setSelectedMaterialType] = useState('Copper'); // Default to 'Copper'
+    const [selectedMaterialType, setSelectedMaterialType] = useState('Brass'); // Default to 'Copper'
 
     // Step 2: Filter raw materials based on the selected material type (Brass or Copper)
     const filteredMaterials = rawMaterials.filter(material => material.materialType === selectedMaterialType);
@@ -283,37 +283,44 @@ const Inventory = () => {
                     <h1 className='mt-3 pl-2 text-2xl'>Raw Materials:</h1>
                     <div className='flex justify-center mt-5'>
                         <button
-                            onClick={() => setSelectedMaterialType('Copper')}
-                            className={`px-2 text-lg mx-2 ${selectedMaterialType === 'Copper' ? 'bg-slate-700' : ''} text-white rounded-sm`}
-                        >
-                            Copper
-                        </button>
-                        <button
                             onClick={() => setSelectedMaterialType('Brass')}
                             className={`px-2 text-xl mx-2 ${selectedMaterialType === 'Brass' ? 'bg-slate-700' : ''} text-white rounded-sm`}
                         >
                             Brass
                         </button>
+                        <button
+                            onClick={() => setSelectedMaterialType('Copper')}
+                            className={`px-2 text-lg mx-2 ${selectedMaterialType === 'Copper' ? 'bg-slate-700' : ''} text-white rounded-sm`}
+                        >
+                            Copper
+                        </button>
                     </div>
 
                     {/* Step 4: Display filtered raw materials based on selected material type */}
                     <ol className='pl-2 mt-6'>
-                        {filteredMaterials.map(material => (
-                            <li
-                                key={material._id}
-                                onClick={() => handleMaterialClick(material._id)}
-                                className={`cursor-pointer hover:bg-indigo-400 mt-2 ${selectedMaterial === material._id ? 'bg-slate-700' : ''}`}
-                            >
-                                {material.itemNumber}
-                            </li>
-                        ))}
+                        {filteredMaterials
+                            .sort((a, b) => {
+                                return a.itemNumber.localeCompare(b.itemNumber);
+                            })
+                            .slice(0, displayedMaterials)
+                            .map(material => (
+                                <li
+                                    key={material._id}
+                                    onClick={() => handleMaterialClick(material._id)}
+                                    className={`cursor-pointer hover:bg-indigo-400 mt-2 ${selectedMaterial === material._id ? 'bg-slate-700' : ''}`}
+                                >
+                                    {material.itemNumber}
+                                </li>
+                            ))}
                     </ol>
-                    <div className='flex justify-center items-center mt-2 text-xl'>
-                        <button onClick={handleViewAllToggle} className='text-gray-900 underline cursor-pointer'>
-                            {viewAll ? 'Less' : 'More'}
-                        </button>
-                    </div>
-                    <div className='m-2 text-xl cursor-pointer' onClick={() => navigate('/summary')}>Summary</div>
+                    {filteredMaterials.length > 10 && (
+                        <div className='flex justify-center items-center mt-2 text-xl'>
+                            <button onClick={handleViewAllToggle} className='text-gray-900 underline cursor-pointer pb-2 pt-2 hover:text-gray-300'>
+                                {viewAll ? 'Less' : 'More'}
+                            </button>
+                        </div>
+                    )}
+                    <div className='m-2 text-xl cursor-pointer pt-4 border-t border-gray-400' onClick={() => navigate('/summary')}>Summary</div>
                 </div>
             </div>
 
