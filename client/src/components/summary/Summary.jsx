@@ -14,7 +14,7 @@ const Summary = () => {
     const [totalStockBalance, setTotalStockBalance] = useState(0);
 
     useEffect(() => {
-        axios.get('http://localhost:4040/api/rawmaterials')
+        axios.get('http://ogilvieserver.servebeer.com:4040/api/rawmaterials')
             .then(res => setData(res.data))
             .catch(er => console.error(er));
     }, []);

@@ -76,7 +76,7 @@ const Inventory = () => {
 
     useEffect(() => {
         // Fetch raw materials from the server
-        axios.get('http://localhost:4040/api/rawmaterials')
+        axios.get('http://ogilvieserver.servebeer.com:4040/api/rawmaterials')
             .then(response => setRawMaterials(response.data))
             .catch(error => console.error(error));
     }, []);
@@ -90,7 +90,7 @@ const Inventory = () => {
     const handleMaterialChange = async (materialId) => {
         // Fetch data for the selected raw material
         try {
-            const response = await axios.get(`http://localhost:4040/api/rawMaterials/${materialId}`);
+            const response = await axios.get(`http://ogilvieserver.servebeer.com:4040/api/rawMaterials/${materialId}`);
             const materialEntries = response.data.entry;
 
             let yesterdayStockBalance = 0;
@@ -187,7 +187,7 @@ const Inventory = () => {
         }
 
         try {
-            await axios.delete(`http://localhost:4040/api/rawMaterials/${selectedMaterial}/entry/${entryId}/delete`);
+            await axios.delete(`http://ogilvieserver.servebeer.com:4040/api/rawMaterials/${selectedMaterial}/entry/${entryId}/delete`);
             // Refresh data after deletion
             handleMaterialChange(selectedMaterial);
         } catch (error) {
@@ -210,10 +210,10 @@ const Inventory = () => {
         };
 
         try {
-            await axios.put(`http://localhost:4040/api/rawMaterials/${selectedMaterial}/entry/${editEntryId}/edit`, editedData);
+            await axios.put(`http://ogilvieserver.servebeer.com:4040/api/rawMaterials/${selectedMaterial}/entry/${editEntryId}/edit`, editedData);
 
             // Fetching entries for the selected material from the database
-            const response = await axios.get(`http://localhost:4040/api/rawMaterials/${selectedMaterial}`);
+            const response = await axios.get(`http://ogilvieserver.servebeer.com:4040/api/rawMaterials/${selectedMaterial}`);
             const materialEntries = response.data.entry;
 
             // Find the index of the edited entry
@@ -225,7 +225,7 @@ const Inventory = () => {
                 materialEntries[i].stockBalance = calculateEditedStockBalance(materialEntries[i]);
 
                 // Update the entry in the database
-                await axios.put(`http://localhost:4040/api/rawMaterials/${selectedMaterial}/entry/${materialEntries[i]._id}/edit`, materialEntries[i]);
+                await axios.put(`http://ogilvieserver.servebeer.com:4040/api/rawMaterials/${selectedMaterial}/entry/${materialEntries[i]._id}/edit`, materialEntries[i]);
             }
 
             setMaterialData(materialEntries);
@@ -254,7 +254,7 @@ const Inventory = () => {
 
         try {
             // Submit new entry
-            await axios.post(`http://localhost:4040/api/rawMaterials/${selectedMaterial}/entry`, inputData);
+            await axios.post(`http://ogilvieserver.servebeer.com:4040/api/rawMaterials/${selectedMaterial}/entry`, inputData);
 
             // Refresh data after submitting
             handleMaterialChange(selectedMaterial);
